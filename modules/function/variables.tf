@@ -1,13 +1,13 @@
 
 variable "enabled" {
   description = "Determines if module should active"
-  type = bool
-  default = true
+  type        = bool
+  default     = true
 }
 
 variable "filename" {
-    description = "Local path to function zip"
-    type = string
+  description = "Local path to function zip"
+  type        = string
 }
 
 variable "function_name" {
@@ -15,25 +15,25 @@ variable "function_name" {
 }
 
 variable "role_arn" {
-    description = "IAM role for Lambda function"
-    type = string
-    default = null
+  description = "IAM role for Lambda function"
+  type        = string
+  default     = null
 }
 
 variable "handler" {
-    description = "Lambda Function entrypoint"
-    type = string
+  description = "Lambda Function entrypoint"
+  type        = string
 }
 
 variable "runtime" {
-    description = "Runtime for Lambda Function (e.g python3.8, go1.x, ruby2.5, etc.)"
-    type = string
+  description = "Runtime for Lambda Function (e.g python3.8, go1.x, ruby2.5, etc.)"
+  type        = string
 }
 
 variable "env_vars" {
   description = "Environment variables to pass into Lambda Function"
-  type = map(string)
-  default = {}
+  type        = map(string)
+  default     = {}
 }
 
 variable "custom_role_policy_arns" {
@@ -59,6 +59,6 @@ variable "statements" {
 
 variable "allowed_to_invoke_arns" {
   description = "AWS entities that can invoke the lambda function"
-  type = list(string)
-  default = []
+  type        = list(string)
+  default     = []
 }
