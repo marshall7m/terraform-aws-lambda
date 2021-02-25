@@ -5,3 +5,7 @@ output "function_arn" {
 output "role_arn" {
   value = module.iam_role[0].role_arn
 }
+
+output "function_invoke_arn" {
+  value = aws_lambda_function.this[0].invoke_arn
+}
