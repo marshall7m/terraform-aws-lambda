@@ -1,3 +1,5 @@
+# TODO: Create option to upload lambda artifacts to s3 given s3 better supprot with bigger files
+
 locals {
   allowed_to_invoke_arns = [for arn in var.allowed_to_invoke_arns : {
     service    = split(":", arn)[2]
@@ -13,6 +15,7 @@ resource "aws_lambda_function" "this" {
   handler          = var.handler
   source_code_hash = filebase64sha256(var.filename)
   runtime          = var.runtime
+  layers           = aws_lambda_layer_version.this[*].arn
 
   environment {
     variables = var.env_vars
@@ -35,4 +38,17 @@ module "iam_role" {
   trusted_services        = ["lambda.amazonaws.com"]
   custom_role_policy_arns = length(var.statements) == 0 && length(var.custom_role_policy_arns) == 0 ? ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"] : var.custom_role_policy_arns
   statements              = var.statements
+}
+
+resource "aws_lambda_layer_version" "this" {
+  for_each            = { for layer in var.lambda_layers : layer.name => layer }
+  filename            = each.value.filename
+  layer_name          = each.value.name
+  compatible_runtimes = each.value.runtimes
+  source_code_hash    = filebase64sha256(var.filename)
+  description         = each.value.description
+  license_info        = each.value.license_info
+  s3_bucket           = each.value.s3_bucket
+  s3_key              = each.value.s3_key
+  s3_object_version   = each.value.s3_object_version
 }

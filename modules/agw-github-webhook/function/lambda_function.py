@@ -3,6 +3,9 @@ import hmac
 import hashlib
 import logging
 import boto3
+from github import Github
+import os
+import re
 
 log = logging.getLogger(__name__)
 
@@ -25,12 +28,35 @@ def lambda_handler(event, context):
         }
      
     try:
-        clone_url = parsed_payload['repository']['clone_url']
+        clone_url = parsed_payload['pull_request']['base']['repo']['clone_url']
+        base_sha = parsed_payload['pull_request']['base']['sha']
+        head_sha = parsed_payload['pull_request']['head']['sha']
     except Exception:
         log.error('payload does not have a repository.clone_url attribute')
         return {
             "statusCode": 400,
             "body": json.dumps({'error': 'payload does not have a repository.clone_url attribute'})
+        }
+    trigger_pipeline = validate_pr(
+        clone_url, 
+        base_sha, 
+        head_sha, 
+        os.environ['path_filter']
+    )
+
+    if not trigger_pipeline:
+        return {
+            'statusCode': 403,
+            'body': json.dumps(f'Pull request does not fulfill file path trigger filter: ${path_filter}')
+        }
+        
+    try:
+        response = cp.start
+    except Exception:
+        log.error(f'unable to trigger target CodePipeline: ${pipeline_name}')
+        return {
+            "statusCode": 500,
+            "body": json.dumps({'error': f'unable to trigger target CodePipeline: ${pipeline_name}'})
         }
     
     return {
@@ -55,3 +81,17 @@ def validate_sig(header_sig, payload):
        log.error('Header signature and expected signature do not match')
 
     return authorized
+
+# def validate_pr(repo_full_name, base_ref, head_ref, path_filter=""):
+#     gh = Github(os.environ["GITHUB_TOKEN"])
+
+#     repo = gh.get_repo(repo_full_name)
+#     head = repo.get_branch(head_ref)
+#     base = repo.get_branch(base_ref)
+
+#     diff_paths = [f.filename for f in repo.compare(
+#         base.commit.sha, head.commit.sha.files)]
+
+#     for f in diff_paths:
+#         if re.search(path_filter, f):
+#             return True

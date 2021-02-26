@@ -49,21 +49,50 @@ resource "aws_api_gateway_integration" "this" {
   integration_http_method = "POST"
 }
 
-data "archive_file" "lambda_zip" {
-  type        = "zip"
-  output_path = "lambda.zip"
-  source_dir  = "lambda/"
-}
-
 module "lambda" {
   source                 = "../function"
-  filename               = data.archive_file.lambda_zip.output_path
+  filename               = data.archive_file.lambda_function.output_path
+  source_code_hash       = data.archive_file.lambda_function.output_base64sha256
   function_name          = "github-webhook-incoming"
   handler                = "lambda_handler"
   runtime                = "python3.8"
   allowed_to_invoke_arns = [aws_api_gateway_rest_api.this.arn]
+  env_vars = {
+    github_token = var.github_token
+    path_filter  = var.path_filter
+  }
+  lambda_layers = [
+    {
+      name             = "lambda-deps"
+      filename         = data.archive_file.lambda_deps.output_path
+      source_code_hash = data.archive_file.lambda_deps.output_base64sha256
+      runtimes         = ["python3.8"]
+    }
+  ]
 }
 
+data "archive_file" "lambda_deps" {
+  type        = "zip"
+  source_file = "${path.module}/package/python"
+  output_path = "${path.module}/package.zip"
+}
+
+data "archive_file" "lambda_function" {
+  type        = "zip"
+  source_file = "${path.module}/function/"
+  output_path = "${path.module}/function.zip"
+}
+
+resource "null_resource" "pip_deps" {
+  triggers = {
+    zip_hash = fileexists("${path.module}/package.zip") ? data.archive_file.lambda_deps.output_base64sha256 : timestamp()
+  }
+  provisioner "local-exec" {
+    command = <<EOF
+    pip install --target ${path.module}/package/python -r ${path.module}/package/requirements.txt
+    EOF
+  }
+}
 resource "github_repository_webhook" "this" {
   for_each   = { for repo in local.all_repos : repo.name => repo }
   repository = each.value.name

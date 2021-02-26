@@ -9,3 +9,7 @@ output "role_arn" {
 output "function_invoke_arn" {
   value = aws_lambda_function.this[0].invoke_arn
 }
+
+output "layer_arns" {
+  value = try(aws_lambda_layer_version.this[*].arn, [])
+}

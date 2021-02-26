@@ -7,16 +7,12 @@ terraform {
 }
 
 inputs = {
-  repos = [
-    {
-      name   = "terraform-aws-codepipeline"
-      events = ["push"]
-    }
-  ]
   repo_queries = [
     {
-      query  = "terraform-aws- in:name"
-      events = ["push"]
+      query  = "terraform-aws-codepipeline in:name"
+      events = ["pull_request"]
     }
   ]
+  github_token = get_env("GITHUB_TOKEN")
+  path_filter  = ".+\\.tf$|.+\\.hcl$"
 }

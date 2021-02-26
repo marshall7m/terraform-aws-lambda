@@ -29,3 +29,15 @@ variable "repo_queries" {
   }))
   default = []
 }
+
+variable "github_token" {
+  description = "GitHub token value to allow Lambda function to interact with associated GitHub account"
+  type        = string
+  sensitive   = true
+}
+
+variable "path_filter" {
+  description = "Regex pattern to match files within pull request. If a file matches, the pipeline is triggered."
+  type        = string
+  default     = ""
+}
