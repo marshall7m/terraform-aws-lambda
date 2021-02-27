@@ -9,7 +9,7 @@ terraform {
 inputs = {
   repo_queries = [
     {
-      query  = "terraform-aws-codepipeline in:name"
+      query  = "foo in:name"
       events = ["pull_request"]
     }
   ]

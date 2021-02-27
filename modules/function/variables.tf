@@ -68,12 +68,6 @@ variable "statements" {
   default = []
 }
 
-variable "allowed_to_invoke_arns" {
-  description = "AWS entities that can invoke the lambda function"
-  type        = list(string)
-  default     = []
-}
-
 variable "lambda_layers" {
   description = "List of Lambda layers that will be accessible to the Lambda function"
   type = list(object({
@@ -86,6 +80,28 @@ variable "lambda_layers" {
     s3_bucket         = optional(string)
     s3_key            = optional(string)
     s3_object_version = optional(string)
+  }))
+  default = []
+}
+
+variable "enable_cw_logs" {
+  description = "Determines if Cloudwatch log group should be created and associated with Lambda function"
+  type        = bool
+  default     = true
+}
+
+variable "cw_retention_in_days" {
+  description = "Number of days Cloudwatch should retain a log event"
+  type        = number
+  default     = 14
+}
+
+variable "allowed_to_invoke" {
+  description = "Services that are allowed to invoke the Lambda function"
+  type = list(object({
+    statement_id = optional(string)
+    principal    = string
+    arn          = string
   }))
   default = []
 }

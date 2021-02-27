@@ -1,10 +1,8 @@
 # TODO: Create option to upload lambda artifacts to s3 given s3 better supprot with bigger files
 
 locals {
-  allowed_to_invoke_arns = [for arn in var.allowed_to_invoke_arns : {
-    service    = split(":", arn)[2]
-    source_arn = arn
-  }]
+  allowed_to_invoke = [for entity in var.allowed_to_invoke : merge(entity,
+  { statement_id = "AllowInvokeFrom${title(split(".", entity.principal)[0])}" })]
 }
 
 resource "aws_lambda_function" "this" {
@@ -15,7 +13,7 @@ resource "aws_lambda_function" "this" {
   handler          = var.handler
   source_code_hash = filebase64sha256(var.filename)
   runtime          = var.runtime
-  layers           = aws_lambda_layer_version.this[*].arn
+  layers           = [for n in var.lambda_layers[*].name : aws_lambda_layer_version.this[n].arn]
 
   environment {
     variables = var.env_vars
@@ -23,12 +21,12 @@ resource "aws_lambda_function" "this" {
 }
 
 resource "aws_lambda_permission" "this" {
-  count         = var.enabled ? length(local.allowed_to_invoke_arns) : 0
-  statement_id  = "AllowInvokeFrom${title(local.allowed_to_invoke_arns[count.index].service)}"
+  count         = var.enabled ? length(local.allowed_to_invoke) : 0
+  statement_id  = local.allowed_to_invoke[count.index].statement_id
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.this[0].function_name
-  principal     = "${local.allowed_to_invoke_arns[count.index].service}.amazonaws.com"
-  source_arn    = local.allowed_to_invoke_arns[count.index].source_arn
+  principal     = local.allowed_to_invoke[count.index].principal
+  source_arn    = local.allowed_to_invoke[count.index].arn
 }
 
 module "iam_role" {
@@ -51,4 +49,10 @@ resource "aws_lambda_layer_version" "this" {
   s3_bucket           = each.value.s3_bucket
   s3_key              = each.value.s3_key
   s3_object_version   = each.value.s3_object_version
+}
+
+resource "aws_cloudwatch_log_group" "this" {
+  count             = var.enable_cw_logs ? 1 : 0
+  name              = "/aws/lambda/${var.function_name}"
+  retention_in_days = var.cw_retention_in_days
 }

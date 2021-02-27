@@ -14,12 +14,29 @@ locals {
 resource "aws_api_gateway_rest_api" "this" {
   name        = var.api_name
   description = var.api_description
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
 }
 
 resource "aws_api_gateway_deployment" "this" {
   rest_api_id = aws_api_gateway_rest_api.this.id
-  stage_name  = "prod"
+  lifecycle {
+    create_before_destroy = true
+  }
+  depends_on = [aws_api_gateway_method.this, aws_api_gateway_integration.this]
 }
+
+# resource "aws_api_gateway_method_settings" "all" {
+#   rest_api_id = aws_api_gateway_rest_api.this.id
+#   stage_name  = aws_api_gateway_stage.this.stage_name
+#   method_path = "*/*"
+
+#   settings {
+#     metrics_enabled = true
+#     logging_level   = "INFO"
+#   }
+# }
 
 resource "aws_api_gateway_stage" "this" {
   deployment_id = aws_api_gateway_deployment.this.id
@@ -40,6 +57,13 @@ resource "aws_api_gateway_method" "this" {
   authorization = "NONE"
 }
 
+resource "aws_api_gateway_method_response" "response_200" {
+  rest_api_id = aws_api_gateway_rest_api.this.id
+  resource_id = aws_api_gateway_resource.this.id
+  http_method = aws_api_gateway_method.this.http_method
+  status_code = "200"
+}
+
 resource "aws_api_gateway_integration" "this" {
   rest_api_id             = aws_api_gateway_rest_api.this.id
   resource_id             = aws_api_gateway_resource.this.id
@@ -47,16 +71,29 @@ resource "aws_api_gateway_integration" "this" {
   type                    = "AWS_PROXY"
   uri                     = module.lambda.function_invoke_arn
   integration_http_method = "POST"
+  #   request_templates = {
+  #     "application/json" = <<EOF
+  # {
+  #    "body" : $input.json('$')
+  # }
+  # EOF
 }
 
 module "lambda" {
-  source                 = "../function"
-  filename               = data.archive_file.lambda_function.output_path
-  source_code_hash       = data.archive_file.lambda_function.output_base64sha256
-  function_name          = "github-webhook-incoming"
-  handler                = "lambda_handler"
-  runtime                = "python3.8"
-  allowed_to_invoke_arns = [aws_api_gateway_rest_api.this.arn]
+  source           = "../function"
+  filename         = data.archive_file.lambda_function.output_path
+  source_code_hash = data.archive_file.lambda_function.output_base64sha256
+  function_name    = "github-webhook-incoming"
+  handler          = "lambda_handler"
+  runtime          = "python3.8"
+  allowed_to_invoke = [
+    {
+      statement_id = "test"
+      principal    = "apigateway.amazonaws.com"
+      arn          = aws_api_gateway_rest_api.this.execution_arn
+    }
+  ]
+  enable_cw_logs = true
   env_vars = {
     github_token = var.github_token
     path_filter  = var.path_filter
@@ -73,13 +110,13 @@ module "lambda" {
 
 data "archive_file" "lambda_deps" {
   type        = "zip"
-  source_file = "${path.module}/package/python"
+  source_dir  = "${path.module}/package/python"
   output_path = "${path.module}/package.zip"
 }
 
 data "archive_file" "lambda_function" {
   type        = "zip"
-  source_file = "${path.module}/function/"
+  source_dir  = "${path.module}/function"
   output_path = "${path.module}/function.zip"
 }
 
@@ -98,7 +135,7 @@ resource "github_repository_webhook" "this" {
   repository = each.value.name
 
   configuration {
-    url          = data.github_repository.this[each.value.name].http_clone_url
+    url          = "${aws_api_gateway_deployment.this.invoke_url}${aws_api_gateway_stage.this.stage_name}${aws_api_gateway_resource.this.path}"
     content_type = "json"
     insecure_ssl = false
   }
@@ -120,4 +157,16 @@ data "github_repositories" "queried" {
 
 data "github_user" "current" {
   username = ""
+}
+
+
+resource "aws_api_gateway_account" "this" {
+  cloudwatch_role_arn = module.cw_role.role_arn
+}
+
+module "cw_role" {
+  source                  = "github.com/marshall7m/terraform-aws-iam/modules//iam-role"
+  role_name               = "Account-API-Gateway-CloudWatch"
+  trusted_services        = ["apigateway.amazonaws.com"]
+  custom_role_policy_arns = ["arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"]
 }
