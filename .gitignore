@@ -1,6 +1,7 @@
 account.hcl
 terraform.tfstate*
 *.terraform*
+*.terragrunt*
 *.terragrunt-cache*
 .DS_Store
 *.cache*

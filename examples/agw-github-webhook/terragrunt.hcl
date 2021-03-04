@@ -13,6 +13,5 @@ inputs = {
       events = ["pull_request"]
     }
   ]
-  github_token = get_env("GITHUB_TOKEN")
-  path_filter  = ".+\\.tf$|.+\\.hcl$"
+  github_secret_ssm_value = get_env("GITHUB_SECRET")
 }

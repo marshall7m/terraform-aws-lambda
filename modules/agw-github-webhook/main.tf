@@ -19,25 +19,6 @@ resource "aws_api_gateway_rest_api" "this" {
   }
 }
 
-resource "aws_api_gateway_deployment" "this" {
-  rest_api_id = aws_api_gateway_rest_api.this.id
-  lifecycle {
-    create_before_destroy = true
-  }
-  depends_on = [aws_api_gateway_method.this, aws_api_gateway_integration.this]
-}
-
-# resource "aws_api_gateway_method_settings" "all" {
-#   rest_api_id = aws_api_gateway_rest_api.this.id
-#   stage_name  = aws_api_gateway_stage.this.stage_name
-#   method_path = "*/*"
-
-#   settings {
-#     metrics_enabled = true
-#     logging_level   = "INFO"
-#   }
-# }
-
 resource "aws_api_gateway_stage" "this" {
   deployment_id = aws_api_gateway_deployment.this.id
   rest_api_id   = aws_api_gateway_rest_api.this.id
@@ -47,71 +28,88 @@ resource "aws_api_gateway_stage" "this" {
 resource "aws_api_gateway_resource" "this" {
   rest_api_id = aws_api_gateway_rest_api.this.id
   parent_id   = aws_api_gateway_rest_api.this.root_resource_id
-  path_part   = "incoming"
+  path_part   = "github"
 }
 
-resource "aws_api_gateway_method" "this" {
+resource "aws_api_gateway_method" "proxy_root" {
   rest_api_id   = aws_api_gateway_rest_api.this.id
   resource_id   = aws_api_gateway_resource.this.id
   http_method   = "POST"
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_method_response" "response_200" {
+resource "aws_api_gateway_integration" "lambda_root" {
   rest_api_id = aws_api_gateway_rest_api.this.id
-  resource_id = aws_api_gateway_resource.this.id
-  http_method = aws_api_gateway_method.this.http_method
-  status_code = "200"
-}
+  resource_id = aws_api_gateway_method.proxy_root.resource_id
+  http_method = aws_api_gateway_method.proxy_root.http_method
 
-resource "aws_api_gateway_integration" "this" {
-  rest_api_id             = aws_api_gateway_rest_api.this.id
-  resource_id             = aws_api_gateway_resource.this.id
-  http_method             = aws_api_gateway_method.this.http_method
+  integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = module.lambda.function_invoke_arn
-  integration_http_method = "POST"
-  #   request_templates = {
-  #     "application/json" = <<EOF
-  # {
-  #    "body" : $input.json('$')
-  # }
-  # EOF
+}
+
+resource "aws_api_gateway_deployment" "this" {
+  rest_api_id = aws_api_gateway_rest_api.this.id
+  lifecycle {
+    create_before_destroy = true
+  }
+  depends_on = [
+    aws_api_gateway_resource.this,
+    aws_api_gateway_method.proxy_root,
+    aws_api_gateway_integration.lambda_root
+  ]
 }
 
 module "lambda" {
   source           = "../function"
   filename         = data.archive_file.lambda_function.output_path
   source_code_hash = data.archive_file.lambda_function.output_base64sha256
-  function_name    = "github-webhook-incoming"
-  handler          = "lambda_handler"
+  function_name    = var.function_name
+  handler          = "lambda_function.lambda_handler"
   runtime          = "python3.8"
   allowed_to_invoke = [
     {
-      statement_id = "test"
+      statement_id = "APIGatewayInvokeAccess"
       principal    = "apigateway.amazonaws.com"
-      arn          = aws_api_gateway_rest_api.this.execution_arn
+      arn          = "${aws_api_gateway_rest_api.this.execution_arn}/*/*"
     }
   ]
   enable_cw_logs = true
   env_vars = {
-    github_token = var.github_token
-    path_filter  = var.path_filter
+    CHILD_LAMBDA_ARN              = var.child_function_arn
+    GITHUB_WEBHOOK_SECRET_SSM_KEY = var.github_secret_ssm_key
   }
-  lambda_layers = [
-    {
-      name             = "lambda-deps"
-      filename         = data.archive_file.lambda_deps.output_path
-      source_code_hash = data.archive_file.lambda_deps.output_base64sha256
-      runtimes         = ["python3.8"]
-    }
+  custom_role_policy_arns = [
+    "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+    aws_iam_policy.lambda.arn
   ]
 }
 
-data "archive_file" "lambda_deps" {
-  type        = "zip"
-  source_dir  = "${path.module}/package/python"
-  output_path = "${path.module}/package.zip"
+data "aws_iam_policy_document" "lambda" {
+  statement {
+    sid    = "GithubWebhookSecretReadAccess"
+    effect = "Allow"
+    actions = [
+      "ssm:GetParameter"
+    ]
+    resources = [try(aws_ssm_parameter.github_secret[0].arn, data.aws_ssm_parameter.github_secret[0].arn)]
+  }
+  dynamic "statement" {
+    for_each = var.child_function_arn != null ? [1] : []
+    content {
+      effect = "Allow"
+      actions = [
+        "lambda:InvokeFunction",
+        "lambnda:InvokeAsync"
+      ]
+      resources = [var.child_function_arn]
+    }
+  }
+}
+
+resource "aws_iam_policy" "lambda" {
+  name   = var.function_name
+  policy = data.aws_iam_policy_document.lambda.json
 }
 
 data "archive_file" "lambda_function" {
@@ -120,16 +118,6 @@ data "archive_file" "lambda_function" {
   output_path = "${path.module}/function.zip"
 }
 
-resource "null_resource" "pip_deps" {
-  triggers = {
-    zip_hash = fileexists("${path.module}/package.zip") ? data.archive_file.lambda_deps.output_base64sha256 : timestamp()
-  }
-  provisioner "local-exec" {
-    command = <<EOF
-    pip install --target ${path.module}/package/python -r ${path.module}/package/requirements.txt
-    EOF
-  }
-}
 resource "github_repository_webhook" "this" {
   for_each   = { for repo in local.all_repos : repo.name => repo }
   repository = each.value.name
@@ -138,11 +126,25 @@ resource "github_repository_webhook" "this" {
     url          = "${aws_api_gateway_deployment.this.invoke_url}${aws_api_gateway_stage.this.stage_name}${aws_api_gateway_resource.this.path}"
     content_type = "json"
     insecure_ssl = false
+    secret       = var.github_secret_ssm_value != "" ? var.github_secret_ssm_value : data.aws_ssm_parameter.github_secret[0].value
   }
 
   active = each.value.active
-
   events = each.value.events
+}
+
+resource "aws_ssm_parameter" "github_secret" {
+  count       = var.github_secret_ssm_value != "" ? 1 : 0
+  name        = var.github_secret_ssm_key
+  description = var.github_secret_ssm_description
+  type        = "SecureString"
+  value       = var.github_secret_ssm_value
+  tags        = var.github_secret_ssm_tags
+}
+
+data "aws_ssm_parameter" "github_secret" {
+  count = var.github_secret_ssm_value == "" ? 1 : 0
+  name  = var.github_secret_ssm_key
 }
 
 data "github_repository" "this" {
@@ -157,16 +159,4 @@ data "github_repositories" "queried" {
 
 data "github_user" "current" {
   username = ""
-}
-
-
-resource "aws_api_gateway_account" "this" {
-  cloudwatch_role_arn = module.cw_role.role_arn
-}
-
-module "cw_role" {
-  source                  = "github.com/marshall7m/terraform-aws-iam/modules//iam-role"
-  role_name               = "Account-API-Gateway-CloudWatch"
-  trusted_services        = ["apigateway.amazonaws.com"]
-  custom_role_policy_arns = ["arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"]
 }

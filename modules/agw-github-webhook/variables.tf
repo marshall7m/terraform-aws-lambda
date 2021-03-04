@@ -20,8 +20,33 @@ variable "repos" {
   default = []
 }
 
+variable "github_secret_ssm_key" {
+  description = "Key for github secret within AWS SSM Parameter Store"
+  type        = string
+  default     = "github-webhook-secret"
+}
+
+variable "github_secret_ssm_description" {
+  description = "Github secret SSM parameter description"
+  type        = string
+  default     = "Secret value for Github Webhooks"
+}
+
+variable "github_secret_ssm_value" {
+  description = "Sensitive value for github webhook secret. If not provided, module looks for pre-existing SSM parameter via `github_secret_ssm_key`"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "github_secret_ssm_tags" {
+  description = "Tags for Github webhook secret SSM parameter"
+  type        = map(string)
+  default     = {}
+}
+
 variable "repo_queries" {
-  description = "List of queries used to match repositories used for creating github webhooks. See for query syntax: https://docs.github.com/en/github/searching-for-information-on-github/understanding-the-search-syntax"
+  description = "List of queries to match repositories used for creating github webhooks. See for query syntax: https://docs.github.com/en/github/searching-for-information-on-github/understanding-the-search-syntax"
   type = list(object({
     query  = string
     events = list(string)
@@ -30,14 +55,14 @@ variable "repo_queries" {
   default = []
 }
 
-variable "github_token" {
-  description = "GitHub token value to allow Lambda function to interact with associated GitHub account"
+variable "child_function_arn" {
+  description = "Downstream Lambda function ARN to be invoked"
   type        = string
-  sensitive   = true
+  default     = null
 }
 
-variable "path_filter" {
-  description = "Regex pattern to match files within pull request. If a file matches, the pipeline is triggered."
+variable "function_name" {
+  description = "Name of Lambda function"
   type        = string
-  default     = ""
+  default     = "github-webhook-validator"
 }
