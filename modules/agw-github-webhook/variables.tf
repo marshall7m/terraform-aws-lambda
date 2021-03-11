@@ -64,5 +64,5 @@ variable "child_function_arn" {
 variable "function_name" {
   description = "Name of Lambda function"
   type        = string
-  default     = "github-webhook-validator"
+  default     = "payload-validator"
 }
