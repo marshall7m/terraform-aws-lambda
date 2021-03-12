@@ -3,12 +3,10 @@ locals {
     active = true
   })]
   queried_repos = [for group in var.queried_repos :
-    defaults(
-      merge(
-        group,
-        { query = "${group.query} user:${data.github_user.current.login}" }
-      ),
-  { active = true }) if length(regexall("user:\\s.+", group.query)) == 0]
+    defaults(length(regexall("user:.+", group.query)) == 0 ? 
+      merge(group, { query = "${group.query} user:${data.github_user.current.login}" }) : group,
+      { active = true }) 
+  ]
   queried_repos_final = distinct(flatten([for i in range(length(local.queried_repos)) :
     values({ for repo in data.github_repositories.queried[i].names :
       repo => merge({ name = repo }, local.queried_repos[i])
