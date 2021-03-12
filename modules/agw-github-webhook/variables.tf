@@ -10,10 +10,20 @@ variable "api_description" {
   default     = "API used for custom GitHub webhooks"
 }
 
-variable "repos" {
+variable "named_repos" {
   description = "List of GitHub repositories to create webhooks for"
   type = list(object({
     name   = string
+    events = list(string)
+    active = optional(bool)
+  }))
+  default = []
+}
+
+variable "queried_repos" {
+  description = "List of queries to match repositories used for creating github webhooks. See for query syntax: https://docs.github.com/en/github/searching-for-information-on-github/understanding-the-search-syntax"
+  type = list(object({
+    query  = string
     events = list(string)
     active = optional(bool)
   }))
@@ -43,16 +53,6 @@ variable "github_secret_ssm_tags" {
   description = "Tags for Github webhook secret SSM parameter"
   type        = map(string)
   default     = {}
-}
-
-variable "repo_queries" {
-  description = "List of queries to match repositories used for creating github webhooks. See for query syntax: https://docs.github.com/en/github/searching-for-information-on-github/understanding-the-search-syntax"
-  type = list(object({
-    query  = string
-    events = list(string)
-    active = optional(bool)
-  }))
-  default = []
 }
 
 variable "child_function_arn" {

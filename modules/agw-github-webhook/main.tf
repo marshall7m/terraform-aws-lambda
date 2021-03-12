@@ -1,14 +1,20 @@
 locals {
-  repos = [for repo in var.repos : defaults(repo, {
+  named_repos = [for repo in var.named_repos : defaults(repo, {
     active = true
   })]
-  repo_queries = [for group in var.repo_queries : merge(group, { query = "${group.query} user:${data.github_user.current.login}" }) if length(regexall("user:\\s.+", group.query)) == 0]
-  query_final = distinct(flatten([for i in range(length(local.repo_queries)) :
+  queried_repos = [for group in var.queried_repos :
+    defaults(
+      merge(
+        group,
+        { query = "${group.query} user:${data.github_user.current.login}" }
+      ),
+  { active = true }) if length(regexall("user:\\s.+", group.query)) == 0]
+  queried_repos_final = distinct(flatten([for i in range(length(local.queried_repos)) :
     values({ for repo in data.github_repositories.queried[i].names :
-      repo => merge({ name = repo }, local.repo_queries[i])
-    if contains(local.repos[*].name, repo) == false })
+      repo => merge({ name = repo }, local.queried_repos[i])
+    if contains(local.named_repos[*].name, repo) == false })
   ]))
-  all_repos = concat(local.repos, local.query_final)
+  all_repos = concat(local.named_repos, local.queried_repos_final)
 }
 
 resource "aws_api_gateway_rest_api" "this" {
@@ -153,8 +159,8 @@ data "github_repository" "this" {
 }
 
 data "github_repositories" "queried" {
-  count = length(local.repo_queries)
-  query = local.repo_queries[count.index].query
+  count = length(local.queried_repos)
+  query = local.queried_repos[count.index].query
 }
 
 data "github_user" "current" {

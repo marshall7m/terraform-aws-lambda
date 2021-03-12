@@ -7,10 +7,16 @@ terraform {
 }
 
 inputs = {
-  repo_queries = [
+  queried_repos = [
     {
-      query  = "foo in:name"
+      query  = "aws in:name"
       events = ["pull_request"]
+    }
+  ]
+  named_repos = [
+    {
+      name   = "foo"
+      events = ["push"]
     }
   ]
   github_secret_ssm_value = get_env("GITHUB_SECRET")
