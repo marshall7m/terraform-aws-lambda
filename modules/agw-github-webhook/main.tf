@@ -138,7 +138,7 @@ resource "github_repository_webhook" "this" {
 }
 
 resource "aws_ssm_parameter" "github_secret" {
-  count       = var.github_secret_ssm_value != "" ? 1 : 0
+  count       = var.create_github_secret_ssm_param ? 1 : 0
   name        = var.github_secret_ssm_key
   description = var.github_secret_ssm_description
   type        = "SecureString"
@@ -147,7 +147,7 @@ resource "aws_ssm_parameter" "github_secret" {
 }
 
 data "aws_ssm_parameter" "github_secret" {
-  count = var.github_secret_ssm_value == "" ? 1 : 0
+  count = var.create_github_secret_ssm_param != true ? 1 : 0
   name  = var.github_secret_ssm_key
 }
 

@@ -30,6 +30,12 @@ variable "queried_repos" {
   default = []
 }
 
+variable "create_github_secret_ssm_param" {
+  description = "Determines if module should provision AWS SSM parameter for Github secret"
+  type = bool
+  default = false
+}
+
 variable "github_secret_ssm_key" {
   description = "Key for github secret within AWS SSM Parameter Store"
   type        = string
