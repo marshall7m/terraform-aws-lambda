@@ -13,6 +13,7 @@ locals {
     if contains(local.named_repos[*].name, repo) == false })
   ]))
   all_repos = concat(local.named_repos, local.queried_repos_final)
+  all_repos_final = [for repo in local.all_repos: merge(repo, {clone_url = data.github_repository.this[repo.name].http_clone_url})]
 }
 
 resource "aws_api_gateway_rest_api" "this" {
@@ -151,6 +152,7 @@ data "aws_ssm_parameter" "github_secret" {
   name  = var.github_secret_ssm_key
 }
 
+# used to check if repos are valid repos within provider github account
 data "github_repository" "this" {
   for_each = { for repo in local.all_repos : repo.name => repo }
   name     = each.value.name
