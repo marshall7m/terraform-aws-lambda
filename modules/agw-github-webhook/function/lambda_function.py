@@ -42,9 +42,14 @@ def lambda_handler(event, context):
 
 def validate_sig(header_sig, payload):
     github_secret = ssm.get_parameter(Name=os.environ['GITHUB_WEBHOOK_SECRET_SSM_KEY'], WithDecryption=True)['Parameter']['Value']
-    sha, sig = header_sig.split('=')
+    try:
+        sha, sig = header_sig.split('=')
+    except ValueError:
+        log.error("Signature not signed with sha256 (e.g. sha256=123456)")
+        return False
+
     if sha != 'sha256':
-        log.error('Signature not signed with sha256')
+        log.error('Signature not signed with sha256 (e.g. sha256=123456)')
         return False
 
     expected_sig = hmac.new(bytes(github_secret, 'utf-8'), bytes(payload, 'utf-8'), hashlib.sha256).hexdigest()
