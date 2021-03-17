@@ -11,7 +11,7 @@ resource "aws_lambda_function" "this" {
   function_name    = var.function_name
   role             = coalesce(var.role_arn, module.iam_role[0].role_arn)
   handler          = var.handler
-  source_code_hash = filebase64sha256(var.filename)
+  source_code_hash = coalesce(var.source_code_hash, filebase64sha256(var.filename))
   runtime          = var.runtime
   layers           = [for n in var.lambda_layers[*].name : aws_lambda_layer_version.this[n].arn]
 
