@@ -18,6 +18,9 @@ resource "aws_lambda_function" "this" {
   environment {
     variables = var.env_vars
   }
+  depends_on = [
+    aws_cloudwatch_log_group.this
+  ]
 }
 
 resource "aws_lambda_permission" "this" {
