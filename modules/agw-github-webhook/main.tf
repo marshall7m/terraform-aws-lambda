@@ -112,7 +112,7 @@ data "aws_iam_policy_document" "lambda" {
       effect = "Allow"
       actions = [
         "lambda:InvokeFunction",
-        "lambnda:InvokeAsync"
+        "lambda:InvokeAsync"
       ]
       resources = [var.child_function_arn]
     }
