@@ -2,21 +2,6 @@ locals {
   function_name         = coalesce(var.function_name, "payload-validator-${random_id.default.id}")
   github_secret_ssm_key = coalesce(var.github_secret_ssm_key, "github-webhook-secret-${random_id.default.id}")
   api_name              = coalesce(var.api_name, "github-webhook-${random_id.default.id}")
-  named_repos = [for repo in var.named_repos : defaults(repo, {
-    active = true
-  })]
-  queried_repos = [for group in var.queried_repos :
-    defaults(length(regexall("user:.+", group.query)) == 0 ?
-      merge(group, { query = "${group.query} user:${data.github_user.current.login}" }) : group,
-    { active = true })
-  ]
-  queried_repos_final = distinct(flatten([for i in range(length(local.queried_repos)) :
-    values({ for repo in data.github_repositories.queried[i].names :
-      repo => merge({ name = repo }, local.queried_repos[i])
-    if contains(local.named_repos[*].name, repo) == false })
-  ]))
-  all_repos       = concat(local.named_repos, local.queried_repos_final)
-  all_repos_final = [for repo in local.all_repos : merge(repo, { clone_url = data.github_repository.this[repo.name].http_clone_url })]
 }
 
 resource "random_id" "default" {
@@ -88,7 +73,6 @@ module "lambda" {
   ]
   enable_cw_logs = true
   env_vars = {
-    CHILD_LAMBDA_ARN              = var.child_function_arn
     GITHUB_WEBHOOK_SECRET_SSM_KEY = local.github_secret_ssm_key
   }
   custom_role_policy_arns = [
@@ -120,7 +104,7 @@ data "aws_iam_policy_document" "lambda" {
 }
 
 resource "aws_iam_policy" "lambda" {
-  name   = var.function_name
+  name   = local.function_name
   policy = data.aws_iam_policy_document.lambda.json
 }
 
@@ -131,8 +115,8 @@ data "archive_file" "lambda_function" {
 }
 
 resource "github_repository_webhook" "this" {
-  for_each   = { for repo in local.all_repos : repo.name => repo }
-  repository = each.value.name
+  count      = length(var.repos)
+  repository = var.repos[count.index].name
 
   configuration {
     url          = "${aws_api_gateway_deployment.this.invoke_url}${aws_api_gateway_stage.this.stage_name}${aws_api_gateway_resource.this.path}"
@@ -141,8 +125,8 @@ resource "github_repository_webhook" "this" {
     secret       = var.github_secret_ssm_value != "" ? var.github_secret_ssm_value : data.aws_ssm_parameter.github_secret[0].value
   }
 
-  active = each.value.active
-  events = each.value.events
+  active = true
+  events = var.repos[count.index].events
 }
 
 resource "aws_ssm_parameter" "github_secret" {
@@ -157,19 +141,4 @@ resource "aws_ssm_parameter" "github_secret" {
 data "aws_ssm_parameter" "github_secret" {
   count = var.create_github_secret_ssm_param != true ? 1 : 0
   name  = var.github_secret_ssm_key
-}
-
-# used to check if repos are valid repos within provider github account
-data "github_repository" "this" {
-  for_each = { for repo in local.all_repos : repo.name => repo }
-  name     = each.value.name
-}
-
-data "github_repositories" "queried" {
-  count = length(local.queried_repos)
-  query = local.queried_repos[count.index].query
-}
-
-data "github_user" "current" {
-  username = ""
 }

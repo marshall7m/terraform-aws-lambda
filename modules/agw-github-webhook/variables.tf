@@ -10,22 +10,11 @@ variable "api_description" {
   default     = "API used for custom GitHub webhooks"
 }
 
-variable "named_repos" {
+variable "repos" {
   description = "List of GitHub repositories to create webhooks for"
   type = list(object({
     name   = string
     events = list(string)
-    active = optional(bool)
-  }))
-  default = []
-}
-
-variable "queried_repos" {
-  description = "List of queries to match repositories used for creating github webhooks. See for query syntax: https://docs.github.com/en/github/searching-for-information-on-github/understanding-the-search-syntax"
-  type = list(object({
-    query  = string
-    events = list(string)
-    active = optional(bool)
   }))
   default = []
 }
