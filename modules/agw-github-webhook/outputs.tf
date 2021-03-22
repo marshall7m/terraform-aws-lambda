@@ -10,7 +10,7 @@ output "function_name" {
 
 output "function_arn" {
   description = "ARN of AWS Lambda function used to validate Github webhook"
-  value       = module.lambda.function_name
+  value       = module.lambda.function_arn
 }
 
 output "github_secret_ssm_key" {
