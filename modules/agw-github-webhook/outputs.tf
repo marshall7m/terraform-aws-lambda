@@ -8,6 +8,11 @@ output "function_name" {
   value       = local.function_name
 }
 
+output "function_arn" {
+  description = "ARN of AWS Lambda function used to validate Github webhook"
+  value       = module.lambda.function_name
+}
+
 output "github_secret_ssm_key" {
   description = "Key name for Github secret store in AWS SSM Parameter Store"
   value       = local.github_secret_ssm_key
