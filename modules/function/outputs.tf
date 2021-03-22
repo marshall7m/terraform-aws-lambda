@@ -2,6 +2,10 @@ output "function_arn" {
   value = aws_lambda_function.this[0].arn
 }
 
+output "function_name" {
+  value = var.function_name
+}
+
 output "role_arn" {
   value = module.iam_role[0].role_arn
 }
