@@ -10,6 +10,12 @@ variable "api_description" {
   default     = "API used for custom GitHub webhooks"
 }
 
+variable "request_parameters" {
+  description = "Query string mapping of parameters to pass to backend response"
+  type = map(string)
+  default = {}
+}
+
 variable "repos" {
   description = "List of GitHub repositories to create webhooks for"
   type = list(object({
