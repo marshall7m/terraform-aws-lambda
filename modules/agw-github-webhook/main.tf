@@ -33,6 +33,7 @@ resource "aws_api_gateway_method" "proxy_root" {
   resource_id   = aws_api_gateway_resource.this.id
   http_method   = "POST"
   authorization = "NONE"
+  request_parameters = var.method_request_parameters
 }
 
 resource "aws_api_gateway_integration" "lambda_root" {
@@ -42,7 +43,7 @@ resource "aws_api_gateway_integration" "lambda_root" {
 
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  request_parameters = var.request_parameters
+  request_parameters = var.integration_request_parameters
   uri                     = module.lambda.function_invoke_arn
 }
 

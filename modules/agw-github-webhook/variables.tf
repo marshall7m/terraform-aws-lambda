@@ -10,8 +10,14 @@ variable "api_description" {
   default     = "API used for custom GitHub webhooks"
 }
 
-variable "request_parameters" {
-  description = "Query string mapping of parameters to pass to backend response"
+variable "method_request_parameters" {
+  description = "AWS API Gateway method request parameters to pass to downstream API integration"
+  type = map(string)
+  default = {}
+}
+
+variable "integration_request_parameters" {
+  description = "AWS API Gateway integration query string mapping of parameters to pass to Lambda function"
   type = map(string)
   default = {}
 }
