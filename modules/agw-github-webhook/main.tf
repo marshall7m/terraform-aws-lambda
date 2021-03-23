@@ -44,6 +44,8 @@ resource "aws_api_gateway_integration" "lambda_root" {
   integration_http_method = "POST"
   type                    = "AWS"
   request_parameters = var.integration_request_parameters
+  request_templates = var.integration_request_templates
+  passthrough_behavior = var.integration_passthrough_behavior
   uri                     = module.lambda.function_invoke_arn
 }
 

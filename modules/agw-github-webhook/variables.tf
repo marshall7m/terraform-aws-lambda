@@ -16,6 +16,18 @@ variable "method_request_parameters" {
   default = {}
 }
 
+variable "integration_request_templates" {
+  description = "Request templates for downstream AWS Lambda function"
+  type = map(string)
+  default = {}
+}
+
+variable "integration_passthrough_behavior" {
+  description = "Passthrough behavior for API gateway integration for downstream Lambda function. (Required if var.integration_request_templates is passed)"
+  type = string
+  default = null
+}
+
 variable "integration_request_parameters" {
   description = "AWS API Gateway integration query string mapping of parameters to pass to Lambda function"
   type = map(string)
