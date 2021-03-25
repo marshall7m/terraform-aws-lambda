@@ -10,30 +10,6 @@ variable "api_description" {
   default     = "API used for custom GitHub webhooks"
 }
 
-variable "method_request_parameters" {
-  description = "AWS API Gateway method request parameters to pass to downstream API integration"
-  type = map(string)
-  default = {}
-}
-
-variable "integration_request_templates" {
-  description = "Request templates for downstream AWS Lambda function"
-  type = map(string)
-  default = {}
-}
-
-variable "integration_passthrough_behavior" {
-  description = "Passthrough behavior for API gateway integration for downstream Lambda function. (Required if var.integration_request_templates is passed)"
-  type = string
-  default = null
-}
-
-variable "integration_request_parameters" {
-  description = "AWS API Gateway integration query string mapping of parameters to pass to Lambda function"
-  type = map(string)
-  default = {}
-}
-
 variable "repos" {
   description = "List of GitHub repositories to create webhooks for"
   type = list(object({
@@ -74,10 +50,10 @@ variable "github_secret_ssm_tags" {
   default     = {}
 }
 
-variable "child_function_arn" {
-  description = "Downstream Lambda function ARN to be invoked"
-  type        = string
-  default     = null
+variable "lambda_destination_arns" {
+  description = "AWS ARNs of services that will be invoked with asynchronous Lambda results"
+  type        = list(string)
+  default     = []
 }
 
 variable "function_name" {

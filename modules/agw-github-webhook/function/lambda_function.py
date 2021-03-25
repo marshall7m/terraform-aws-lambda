@@ -9,7 +9,6 @@ import re
 log = logging.getLogger(__name__)
 ssm = boto3.client('ssm')
 def lambda_handler(event, context):
-    
     authorized = validate_sig(event['headers']['X-Hub-Signature-256'], event['body'])
     if not authorized:
         return {
