@@ -45,16 +45,16 @@ resource "aws_api_gateway_integration" "lambda_root" {
   request_parameters = {
     "integration.request.header.X-Amz-Invocation-Type" = "'Event'"
   }
-  request_templates = {
-    "application/json" = <<EOF
-{
-  "body" : $input.json('$'),
-  "headers" : {
-    "X-Hub-Signature-256": "$input.params('X-Hub-Signature-256')"
-  }
-}
-EOF
-  }
+#   request_templates = {
+#     "application/json" = <<EOF
+# {
+#   "body" : $input.json('$'),
+#   "headers" : {
+#     "X-Hub-Signature-256": "$input.params('X-Hub-Signature-256')"
+#   }
+# }
+# EOF
+#   }
   uri                     = module.lambda.function_invoke_arn
 }
 
