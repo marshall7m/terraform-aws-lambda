@@ -41,7 +41,7 @@ def validate_sig(header_sig, payload):
         log.error('Signature not signed with sha256 (e.g. sha256=123456)')
         return False
 
-    expected_sig = hmac.new(bytes(github_secret, 'utf-8'), bytes(payload, 'utf-8'), hashlib.sha256).hexdigest()
+    expected_sig = hmac.new(bytes(github_secret, 'utf-8'), bytes(str(payload), 'utf-8'), hashlib.sha256).hexdigest()
 
     authorized = hmac.compare_digest(str(sig), str(expected_sig))
 
