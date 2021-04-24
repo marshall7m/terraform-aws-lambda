@@ -11,6 +11,24 @@ variable "filename" {
   default     = null
 }
 
+variable "image_uri" {
+  description = "AWS ECR image URI that contains the Lambda function deployment package"
+  type        = string
+  default     = null
+}
+
+variable "s3_bucket" {
+  description = "AWS S3 bucket that contains the Lambda function deployment package"
+  type        = string
+  default     = null
+}
+
+variable "s3_key" {
+  description = "AWS S3 bucket key of the Lambda function deployment package"
+  type        = string
+  default     = null
+}
+
 variable "source_code_hash" {
   description = <<EOF
   The base64-encoded SHA256 hash of the package file specified under `filename` or `s3_key`. 
@@ -101,7 +119,7 @@ variable "allowed_to_invoke" {
   type = list(object({
     statement_id = optional(string)
     principal    = string
-    arn          = string
+    arn          = optional(string)
   }))
   default = []
 }

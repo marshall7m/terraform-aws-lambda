@@ -1,4 +1,6 @@
-# TODO: Create option to upload lambda artifacts to s3 given s3 better supprot with bigger files
+# TODO: Create option to upload lambda artifacts to s3 given s3 better support with bigger files
+# TODO: Add other function sources e.g. S3, ECR img, etc.
+
 
 locals {
   allowed_to_invoke = [for entity in var.allowed_to_invoke : merge(entity,
@@ -8,6 +10,9 @@ locals {
 resource "aws_lambda_function" "this" {
   count            = var.enabled ? 1 : 0
   filename         = var.filename
+  image_uri        = var.image_uri
+  s3_bucket        = var.s3_bucket
+  s3_key           = var.s3_key
   function_name    = var.function_name
   role             = coalesce(var.role_arn, module.iam_role[0].role_arn)
   handler          = var.handler

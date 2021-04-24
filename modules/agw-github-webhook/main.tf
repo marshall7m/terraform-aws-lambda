@@ -34,7 +34,7 @@ resource "aws_api_gateway_method" "this" {
   http_method   = "POST"
   authorization = "NONE"
   request_parameters = {
-    "method.request.header.X-GitHub-Event" = true
+    "method.request.header.X-GitHub-Event"      = true
     "method.request.header.X-Hub-Signature-256" = true
   }
 }
@@ -58,9 +58,8 @@ resource "aws_api_gateway_integration" "this" {
   },
 EOF
   }
-  uri                     = module.lambda.function_invoke_arn
+  uri = module.lambda.function_invoke_arn
 }
-  #"body" : $input.json('$')
 
 resource "aws_api_gateway_integration_response" "this" {
   rest_api_id = aws_api_gateway_rest_api.this.id
@@ -162,7 +161,7 @@ module "lambda" {
 
 data "aws_arn" "lambda_dest" {
   count = length(var.lambda_destination_arns)
-  arn = var.lambda_destination_arns[count.index]
+  arn   = var.lambda_destination_arns[count.index]
 }
 
 data "aws_iam_policy_document" "lambda" {
@@ -178,48 +177,48 @@ data "aws_iam_policy_document" "lambda" {
   dynamic "statement" {
     for_each = contains(data.aws_arn.lambda_dest[*].service, "sqs") ? [1] : []
     content {
-      sid = "InvokeSqsDestination"
+      sid    = "InvokeSqsDestination"
       effect = "Allow"
       actions = [
         "sqs:SendMessage"
       ]
-      resources = [for entity in data.aws_arn.lambda_dest: entity.arn if entity.service == "sqs"]
+      resources = [for entity in data.aws_arn.lambda_dest : entity.arn if entity.service == "sqs"]
     }
   }
 
   dynamic "statement" {
     for_each = contains(data.aws_arn.lambda_dest[*].service, "sns") ? [1] : []
     content {
-      sid = "InvokeSnsDestination"
+      sid    = "InvokeSnsDestination"
       effect = "Allow"
       actions = [
         "sns:Publish"
       ]
-      resources = [for entity in data.aws_arn.lambda_dest: entity.arn if entity.service == "sns"]
+      resources = [for entity in data.aws_arn.lambda_dest : entity.arn if entity.service == "sns"]
     }
   }
 
   dynamic "statement" {
     for_each = contains(data.aws_arn.lambda_dest[*].service, "events") ? [1] : []
     content {
-      sid = "InvokeEventsDestination"
+      sid    = "InvokeEventsDestination"
       effect = "Allow"
       actions = [
         "events:PutEvents"
       ]
-      resources = [for entity in data.aws_arn.lambda_dest: entity.arn if entity.service == "events"]
+      resources = [for entity in data.aws_arn.lambda_dest : entity.arn if entity.service == "events"]
     }
   }
 
   dynamic "statement" {
     for_each = contains(data.aws_arn.lambda_dest[*].service, "lambda") ? [1] : []
     content {
-      sid = "InvokeLambdaDestination"
+      sid    = "InvokeLambdaDestination"
       effect = "Allow"
       actions = [
         "lambda:InvokeFunction"
       ]
-      resources = [for entity in data.aws_arn.lambda_dest: entity.arn if entity.service == "lambda"]
+      resources = [for entity in data.aws_arn.lambda_dest : entity.arn if entity.service == "lambda"]
     }
   }
 }
