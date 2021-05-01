@@ -12,7 +12,8 @@ ssm = boto3.client('ssm')
 
 def lambda_handler(event, context):
     try:
-        return validate_sig(event['headers']['X-Hub-Signature-256'], event['body'])
+        validate_sig(event['headers']['X-Hub-Signature-256'], event['body'])
+        return {"message": "Request was successful"}
     except Exception as e:
         api_exception_json = json.dumps(
             {

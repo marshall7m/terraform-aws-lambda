@@ -1,0 +1,47 @@
+<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| terraform | >= 0.14.0 |
+| aws | >= 3.38 |
+
+## Providers
+
+| Name | Version |
+|------|---------|
+| aws | >= 3.38 |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| allowed\_to\_invoke | Services that are allowed to invoke the Lambda function | <pre>list(object({<br>    statement_id = optional(string)<br>    principal    = string<br>    arn          = optional(string)<br>  }))</pre> | `[]` | no |
+| custom\_role\_policy\_arns | List of IAM policy ARNs to attach to the role | `list(string)` | `[]` | no |
+| cw\_retention\_in\_days | Number of days Cloudwatch should retain a log event | `number` | `14` | no |
+| enable\_cw\_logs | Determines if Cloudwatch log group should be created and associated with Lambda function | `bool` | `true` | no |
+| enabled | Determines if module should active | `bool` | `true` | no |
+| env\_vars | Environment variables to pass into Lambda Function | `map(string)` | `{}` | no |
+| filename | Local path to function zip | `string` | `null` | no |
+| function\_name | Name of function to invoke within filename | `string` | n/a | yes |
+| handler | Lambda Function entrypoint | `string` | n/a | yes |
+| image\_uri | AWS ECR image URI that contains the Lambda function deployment package | `string` | `null` | no |
+| lambda\_layers | List of Lambda layers that will be accessible to the Lambda function | <pre>list(object({<br>    filename          = optional(string)<br>    name              = string<br>    runtimes          = list(string)<br>    description       = optional(string)<br>    source_code_hash  = optional(string)<br>    license_info      = optional(string)<br>    s3_bucket         = optional(string)<br>    s3_key            = optional(string)<br>    s3_object_version = optional(string)<br>  }))</pre> | `[]` | no |
+| role\_arn | IAM role for Lambda function | `string` | `null` | no |
+| runtime | Runtime for Lambda Function (e.g python3.8, go1.x, ruby2.5, etc.) | `string` | n/a | yes |
+| s3\_bucket | AWS S3 bucket that contains the Lambda function deployment package | `string` | `null` | no |
+| s3\_key | AWS S3 bucket key of the Lambda function deployment package | `string` | `null` | no |
+| source\_code\_hash | The base64-encoded SHA256 hash of the package file specified under `filename` or `s3_key`. <br>  Used to identify and update source code changes for Lambda function. | `string` | `null` | no |
+| statements | IAM policy statements for role permissions | <pre>list(object({<br>    effect    = string<br>    resources = list(string)<br>    actions   = list(string)<br>    conditions = optional(list(object({<br>      test     = string<br>      variable = string<br>      values   = list(string)<br>    })))<br>  }))</pre> | `[]` | no |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| function\_arn | n/a |
+| function\_invoke\_arn | n/a |
+| function\_name | n/a |
+| layer\_arns | n/a |
+| role\_arn | n/a |
+
+<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->

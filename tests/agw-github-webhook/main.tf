@@ -14,6 +14,20 @@ terraform {
 
 locals {
   repo_name = "mut-agw-github-webhook-${random_id.this.id}"
+  not_sha_sig_input = jsonencode({
+    "headers" = {
+      "X-Hub-Signature-256" = sha256("test")
+      "X-GitHub-Event" : "push"
+    }
+    "body" = {}
+  })
+  invalid_sig_input = jsonencode({
+    "headers" = {
+      "X-Hub-Signature-256" = "sha256=${sha256("test")}"
+      "X-GitHub-Event" : "push"
+    }
+    "body" = {}
+  })
 }
 
 provider "random" {}
@@ -46,8 +60,7 @@ resource "github_repository_file" "test" {
 }
 
 module "mut_agw_github_webhook" {
-  # source = "../../modules/agw-github-webhook"
-  source = "github.com/marshall7m/terraform-aws-lambda/modules//agw-github-webhook"
+  source = "../../modules/agw-github-webhook"
   repos = [
     {
       name   = local.repo_name
@@ -60,82 +73,3 @@ module "mut_agw_github_webhook" {
     github_repository.test
   ]
 }
-
-# data "aws_lambda_invocation" "not_sha_signed" {
-#   function_name = module.mut_agw_github_webhook.function_name
-
-#   input = jsonencode(
-#     {
-#       "headers" = {
-#         "X-Hub-Signature-256" = sha256("test")
-#         "X-GitHub-Event": "push"
-#       }
-#       "body" = {}
-#     }
-#   )
-# }
-
-# data "aws_lambda_invocation" "invalid_sig" {
-#   function_name = module.mut_agw_github_webhook.function_name
-
-#   input = jsonencode(
-#     {
-#       "headers" = {
-#         "X-Hub-Signature-256" = "sha256=${sha256("test")}"
-#         "X-GitHub-Event": "push"
-#       }
-#       "body" = <<EOF
-#       {
-#         "test" = "foo"
-#       }
-#       EOF
-#     }
-#   )
-# }
-
-# TODO: Fix test case for valid signature 
-# find way to emulate lambhda func's hmac.new(msg="") for terraform - could only find sha256()
-# or use local-exec provisioner?
-# data "aws_lambda_invocation" "valid_sig" {
-#   function_name = module.mut_agw_github_webhook.function_name
-
-#   input = jsonencode(
-#     {
-#       "headers" = {
-#         "X-Hub-Signature-256" = "sha256=${sha256(random_password.this.result)}"
-#       }
-#       "body" = ""
-#     }
-#   )
-# }
-
-# data "testing_assertions" "sha_sig" {
-#   subject = "Test lambda signature validation"
-#   equal "not_sha_signed" {
-#     statement = "Test invalid signature not signed with sha256"
-
-#     got = { for key, value in jsondecode(data.aws_lambda_invocation.not_sha_signed.result) : key => jsondecode(value) }
-#     want = {
-#       "statusCode" = 403,
-#     "body" = { "error" = "signature is invalid" } }
-#   }
-
-#   equal "invalid_sig" {
-#     statement = "test invalid signature signed with sha256"
-
-#     got = { for key, value in jsondecode(data.aws_lambda_invocation.invalid_sig.result) : key => jsondecode(value) }
-#     want = {
-#       "statusCode" = 403,
-#     "body" = { "error" = "signature is invalid" } }
-#   }
-
-# TODO: uncomment when data.aws_lambda_invocation.valid_sig is fixed
-# equal "valid_sig" {
-#   statement = "test valid signature signed with sha256"
-
-#   got = { for key, value in jsondecode(data.aws_lambda_invocation.valid_sig.result) : key => jsondecode(value) }
-#   want = {
-#     "statusCode" = 200,
-#   "body" = "Request is valid" }
-# }
-#}
