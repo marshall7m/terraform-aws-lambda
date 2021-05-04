@@ -13,7 +13,6 @@ ssm = boto3.client('ssm')
 def lambda_handler(event, context):
     try:
         validate_sig(event['headers']['X-Hub-Signature-256'], event['body'])
-        return {"message": "Request was successful"}
     except Exception as e:
         api_exception_json = json.dumps(
             {
@@ -23,7 +22,8 @@ def lambda_handler(event, context):
             }
         )
         raise LambdaException(api_exception_json)
-
+    print("Request was successful")
+    return {"message": "Request was successful"}
 def validate_sig(header_sig, payload):
     github_secret = ssm.get_parameter(Name=os.environ['GITHUB_WEBHOOK_SECRET_SSM_KEY'], WithDecryption=True)['Parameter']['Value']
     try:
