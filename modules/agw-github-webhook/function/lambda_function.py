@@ -29,12 +29,10 @@ def validate_sig(header_sig, payload):
     try:
         sha, sig = header_sig.split('=')
     except ValueError:
-        log.info("Signature not signed with sha256 (e.g. sha256=123456)")
-        return False
+        raise ClientException("Signature not signed with sha256 (e.g. sha256=123456)")
 
     if sha != 'sha256':
-        log.info('Signature not signed with sha256 (e.g. sha256=123456)')
-        return False
+        raise ClientException('Signature not signed with sha256 (e.g. sha256=123456)')
 
     expected_sig = hmac.new(bytes(github_secret, 'utf-8'), bytes(str(payload), 'utf-8'), hashlib.sha256).hexdigest()
 
