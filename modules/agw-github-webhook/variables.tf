@@ -10,6 +10,16 @@ variable "api_description" {
   default     = "API used for custom GitHub webhooks"
 }
 
+variable "async_lambda_invocation" {
+  description = <<EOF
+Determines if the backend Lambda function for the API Gateway is invoked asynchronously.
+If true, the API Gateway REST API method will not return the Lambda results to the client.
+See for more info: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-integration-async.html
+  EOF
+  type = bool
+  default = false
+}
+
 variable "repos" {
   description = "List of GitHub repositories to create webhooks for"
   type = list(object({
@@ -50,8 +60,14 @@ variable "github_secret_ssm_tags" {
   default     = {}
 }
 
-variable "lambda_destination_arns" {
-  description = "AWS ARNs of services that will be invoked with asynchronous Lambda results"
+variable "lambda_success_destination_arns" {
+  description = "AWS ARNs of services that will be invoked if Lambda function succeeds"
+  type        = list(string)
+  default     = []
+}
+
+variable "lambda_failure_destination_arns" {
+  description = "AWS ARNs of services that will be invoked if Lambda function fails"
   type        = list(string)
   default     = []
 }

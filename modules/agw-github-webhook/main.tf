@@ -2,6 +2,7 @@ locals {
   function_name         = coalesce(var.function_name, "payload-validator-${random_id.default.id}")
   github_secret_ssm_key = coalesce(var.github_secret_ssm_key, "github-webhook-secret-${random_id.default.id}")
   api_name              = coalesce(var.api_name, "github-webhook-${random_id.default.id}")
+  lambda_destination_arns = concat(var.lambda_success_destination_arns, var.lambda_failure_destination_arns)
 }
 
 resource "random_id" "default" {
@@ -46,7 +47,7 @@ resource "aws_api_gateway_integration" "this" {
 
   integration_http_method = "POST"
   type                    = "AWS"
-  request_parameters = length(var.lambda_destination_arns) > 0 ? {
+  request_parameters = var.async_lambda_invocation ? {
     "integration.request.header.X-Amz-Invocation-Type" = "'Event'"
   } : null
   request_templates = { "application/json" = jsonencode({
@@ -170,6 +171,25 @@ resource "aws_api_gateway_deployment" "this" {
   ]
 }
 
+resource "aws_lambda_function_event_invoke_config" "lambda" {
+  function_name = module.lambda.function_name
+  destination_config {
+    dynamic "on_success" {
+      for_each = toset(var.lambda_success_destination_arns)
+      content {
+        destination = on_success.value
+      }
+    }
+
+    dynamic "on_failure" {
+      for_each = toset(var.lambda_failure_destination_arns)
+      content {
+        destination = on_failure.value
+      }
+    }
+  }
+}
+
 module "lambda" {
   source           = "../function"
   filename         = data.archive_file.lambda_function.output_path
@@ -195,8 +215,8 @@ module "lambda" {
 }
 
 data "aws_arn" "lambda_dest" {
-  count = length(var.lambda_destination_arns)
-  arn   = var.lambda_destination_arns[count.index]
+  count = length(local.lambda_destination_arns)
+  arn   = local.lambda_destination_arns[count.index]
 }
 
 data "aws_iam_policy_document" "lambda" {
