@@ -16,8 +16,8 @@ Determines if the backend Lambda function for the API Gateway is invoked asynchr
 If true, the API Gateway REST API method will not return the Lambda results to the client.
 See for more info: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-integration-async.html
   EOF
-  type = bool
-  default = false
+  type        = bool
+  default     = false
 }
 
 variable "repos" {
@@ -44,7 +44,7 @@ variable "github_secret_ssm_key" {
 variable "github_secret_ssm_description" {
   description = "Github secret SSM parameter description"
   type        = string
-  default     = "Secret value for Github Webhooks"
+  default     = "Secret value for Github Webhooks" #tfsec:ignore:GEN001
 }
 
 variable "github_secret_ssm_value" {
