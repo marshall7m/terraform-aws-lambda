@@ -3,7 +3,7 @@ output "function_arn" {
 }
 
 output "function_name" {
-  value = var.function_name
+  value = aws_lambda_function.this[0].function_name
 }
 
 output "role_arn" {
