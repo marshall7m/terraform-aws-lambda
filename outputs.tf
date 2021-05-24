@@ -25,5 +25,5 @@ output "layer_arns" {
 
 output "cw_log_group_arn" {
   description = "ARN of the CloudWatch log group associated with the Lambda function"
-  value       = one(aws_cloudwatch_log_group.this[0].arn)
+  value       = one([aws_cloudwatch_log_group.this[0].arn])
 }
