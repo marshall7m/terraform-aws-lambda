@@ -3,7 +3,7 @@
 
 | Name | Version |
 |------|---------|
-| terraform | >= 0.14.0 |
+| terraform | >= 0.15.0 |
 | aws | >= 3.38 |
 
 ## Providers
@@ -38,10 +38,11 @@
 
 | Name | Description |
 |------|-------------|
-| function\_arn | n/a |
-| function\_invoke\_arn | n/a |
-| function\_name | n/a |
-| layer\_arns | n/a |
-| role\_arn | n/a |
+| cw\_log\_group\_arn | ARN of the CloudWatch log group associated with the Lambda function |
+| function\_arn | ARN of the Lambda function |
+| function\_invoke\_arn | ARN used to invoke the Lambda function via AWS API Gateway |
+| function\_name | Name of the Lambda function |
+| layer\_arns | List of Lambda layer ARNS |
+| role\_arn | ARN of the IAM role the Lambda function assumes |
 
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
