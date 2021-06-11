@@ -51,7 +51,7 @@ resource "aws_lambda_layer_version" "this" {
   filename            = each.value.filename
   layer_name          = each.value.name
   compatible_runtimes = each.value.runtimes
-  source_code_hash    = filebase64sha256(var.filename)
+  source_code_hash    = each.value.source_code_hash != null ? each.value.source_code_hash : filebase64sha256(each.value.filename)
   description         = each.value.description
   license_info        = each.value.license_info
   s3_bucket           = each.value.s3_bucket
