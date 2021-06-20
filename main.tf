@@ -20,9 +20,13 @@ resource "aws_lambda_function" "this" {
   runtime          = var.runtime
   layers           = [for n in var.lambda_layers[*].name : aws_lambda_layer_version.this[n].arn]
 
-  environment {
-    variables = var.env_vars
+  dynamic "environment" {
+    for_each = var.env_vars != {} ? [1] : []
+    content {
+      variables = var.env_vars
+    }
   }
+
   depends_on = [
     aws_cloudwatch_log_group.this
   ]
