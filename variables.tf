@@ -136,5 +136,5 @@ variable "vpc_config" {
     subnet_ids         = list(string)
     security_group_ids = list(string)
   })
-  default = {}
+  default = null
 }
