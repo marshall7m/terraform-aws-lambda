@@ -54,7 +54,7 @@ data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 data "aws_iam_policy_document" "vpc_access" {
-  count = var.vpc_config != null ? [1] : []
+  count = var.vpc_config != null ? 1 : 0
   statement {
     sid    = "VPCAcess"
     effect = "Allow"
@@ -91,7 +91,7 @@ data "aws_iam_policy_document" "vpc_access" {
 }
 
 resource "aws_iam_policy" "vpc_access" {
-  count       = var.vpc_config != null ? [1] : []
+  count       = var.vpc_config != null ? 1 : 0
   name        = "${var.function_name}-vpc-access"
   description = "Allows Lambda function to create VPC resources neccessary for function to be associated with VPC"
   policy      = data.aws_iam_policy_document.vpc_access[0].json
