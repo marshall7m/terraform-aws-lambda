@@ -50,12 +50,59 @@ resource "aws_lambda_permission" "this" {
   source_arn    = local.allowed_to_invoke[count.index].arn
 }
 
+data "aw_region" "current" {}
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_policy_document" "vpc_access" {
+  count = var.vpc_config != null ? [1] : []
+  statement {
+    sid    = "VPCAcess"
+    effect = "Allow"
+    actions = [
+      "ec2:CreateNetworkInterface",
+      "ec2:DescribeDhcpOptions",
+      "ec2:DescribeNetworkInterfaces",
+      "ec2:DeleteNetworkInterface",
+      "ec2:DescribeSubnets",
+      "ec2:DescribeSecurityGroups",
+      "ec2:DescribeVpcs"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ec2:CreateNetworkInterfacePermission"
+    ]
+    resources = ["arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.id}:network-interface/*"]
+    condition {
+      test     = "StringEquals"
+      variable = "ec2:AuthorizedService"
+      values   = ["codebuild.amazonaws.com"]
+    }
+
+    condition {
+      test     = "ArnEquals"
+      variable = "ec2:Subnet"
+      values   = [for subnet in var.vpc_config.subnet_ids : "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.id}:subnet/${subnet}"]
+    }
+  }
+}
+
+resource "aws_iam_policy" "vpc_access" {
+  count       = var.vpc_config != null ? [1] : []
+  name        = "${var.function_name}-vpc-access"
+  description = "Allows Lambda function to create VPC resources neccessary for function to be associated with VPC"
+  policy      = data.aws_iam_policy_document.vpc_access[0].json
+}
+
 module "iam_role" {
   count                   = var.enabled ? 1 : 0
   source                  = "github.com/marshall7m/terraform-aws-iam/modules//iam-role"
   role_name               = var.function_name
   trusted_services        = ["lambda.amazonaws.com"]
-  custom_role_policy_arns = length(var.statements) == 0 && length(var.custom_role_policy_arns) == 0 ? ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"] : var.custom_role_policy_arns
+  custom_role_policy_arns = concat(length(var.statements) == 0 && length(var.custom_role_policy_arns) == 0 ? ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"] : var.custom_role_policy_arns, aws_iam_policy.vpc_access.arn)
   statements              = var.statements
 }
 
