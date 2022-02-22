@@ -129,3 +129,12 @@ variable "allowed_to_invoke" {
   }))
   default = []
 }
+
+variable "vpc_config" {
+  description = "Subnet and security group IDs to associate the Lambda function with"
+  type = object({
+    subnet_ids         = list(string)
+    security_group_ids = list(string)
+  })
+  default = {}
+}

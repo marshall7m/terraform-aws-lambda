@@ -21,6 +21,14 @@ resource "aws_lambda_function" "this" {
   runtime          = var.runtime
   layers           = [for n in var.lambda_layers[*].name : aws_lambda_layer_version.this[n].arn]
 
+  dynamic "vpc_config" {
+    for_each = var.vpc_config != {} ? [1] : []
+    content {
+      subnet_ids         = var.vpc_config.subnet_ids
+      security_group_ids = var.vpc_config.security_group_ids
+    }
+  }
+
   dynamic "environment" {
     for_each = var.env_vars != {} ? [1] : []
     content {
