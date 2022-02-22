@@ -11,6 +11,7 @@ resource "aws_lambda_function" "this" {
   count            = var.enabled ? 1 : 0
   filename         = var.filename
   image_uri        = var.image_uri
+  timeout          = var.timeout
   s3_bucket        = var.s3_bucket
   s3_key           = var.s3_key
   function_name    = var.function_name

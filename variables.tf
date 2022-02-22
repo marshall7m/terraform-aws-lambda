@@ -17,6 +17,12 @@ variable "image_uri" {
   default     = null
 }
 
+variable "timeout" {
+  description = "Time in seconds the Lambda function has to run"
+  type        = number
+  default     = 3
+}
+
 variable "s3_bucket" {
   description = "AWS S3 bucket that contains the Lambda function deployment package"
   type        = string
