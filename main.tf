@@ -50,7 +50,7 @@ resource "aws_lambda_permission" "this" {
   source_arn    = local.allowed_to_invoke[count.index].arn
 }
 
-data "aw_region" "current" {}
+data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 data "aws_iam_policy_document" "vpc_access" {
