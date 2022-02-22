@@ -97,12 +97,24 @@ resource "aws_iam_policy" "vpc_access" {
   policy      = data.aws_iam_policy_document.vpc_access[0].json
 }
 
+resource "aws_iam_role_policy_attachment" "vpc_access" {
+  count = var.vpc_config != null ? 1 : 0
+  role       = module.iam_role[0].role_name
+  policy_arn = aws_iam_policy.vpc_access[0].arn
+}
+
+resource "aws_iam_role_policy_attachment" "default" {
+  count = length(var.statements) == 0 && length(var.custom_role_policy_arns) == 0 ? 1 : 0
+  role       = module.iam_role[0].role_name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
 module "iam_role" {
   count                   = var.enabled ? 1 : 0
   source                  = "github.com/marshall7m/terraform-aws-iam/modules//iam-role"
   role_name               = var.function_name
   trusted_services        = ["lambda.amazonaws.com"]
-  custom_role_policy_arns = concat(length(var.statements) == 0 && length(var.custom_role_policy_arns) == 0 ? ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"] : var.custom_role_policy_arns, aws_iam_policy.vpc_access.arn)
+  custom_role_policy_arns = var.custom_role_policy_arns
   statements              = var.statements
 }
 
