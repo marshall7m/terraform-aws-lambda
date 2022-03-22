@@ -98,13 +98,13 @@ resource "aws_iam_policy" "vpc_access" {
 }
 
 resource "aws_iam_role_policy_attachment" "vpc_access" {
-  count = var.vpc_config != null ? 1 : 0
+  count      = var.vpc_config != null ? 1 : 0
   role       = module.iam_role[0].role_name
   policy_arn = aws_iam_policy.vpc_access[0].arn
 }
 
 resource "aws_iam_role_policy_attachment" "default" {
-  count = length(var.statements) == 0 && length(var.custom_role_policy_arns) == 0 ? 1 : 0
+  count      = length(var.statements) == 0 && length(var.custom_role_policy_arns) == 0 ? 1 : 0
   role       = module.iam_role[0].role_name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }

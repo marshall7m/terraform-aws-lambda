@@ -33,12 +33,15 @@
 | s3\_key | AWS S3 bucket key of the Lambda function deployment package | `string` | `null` | no |
 | source\_code\_hash | The base64-encoded SHA256 hash of the package file specified under `filename` or `s3_key`. <br>  Used to identify and update source code changes for Lambda function. | `string` | `null` | no |
 | statements | IAM policy statements for role permissions | <pre>list(object({<br>    effect    = string<br>    resources = list(string)<br>    actions   = list(string)<br>    conditions = optional(list(object({<br>      test     = string<br>      variable = string<br>      values   = list(string)<br>    })))<br>  }))</pre> | `[]` | no |
+| timeout | Time in seconds the Lambda function has to run | `number` | `3` | no |
+| vpc\_config | Subnet and security group IDs to associate the Lambda function with | <pre>object({<br>    subnet_ids         = list(string)<br>    security_group_ids = list(string)<br>  })</pre> | `null` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
 | cw\_log\_group\_arn | ARN of the CloudWatch log group associated with the Lambda function |
+| cw\_log\_group\_name | Name of the CloudWatch log group associated with the Lambda function |
 | function\_arn | ARN of the Lambda function |
 | function\_invoke\_arn | ARN used to invoke the Lambda function via AWS API Gateway |
 | function\_name | Name of the Lambda function |
