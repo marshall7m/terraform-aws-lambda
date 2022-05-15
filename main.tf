@@ -116,6 +116,7 @@ module "iam_role" {
   trusted_services        = ["lambda.amazonaws.com"]
   custom_role_policy_arns = var.custom_role_policy_arns
   statements              = var.statements
+  role_force_detach_policies = var.force_detach_policies
 }
 
 resource "aws_lambda_layer_version" "this" {

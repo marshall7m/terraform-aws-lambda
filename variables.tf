@@ -92,6 +92,12 @@ variable "statements" {
   default = []
 }
 
+variable "force_detach_policies" {
+  description = "Determines if policies attached to the Lambda Function's IAM role should be forcefully detached if the role is destroyed"
+  type        = bool
+  default     = false
+}
+
 variable "lambda_layers" {
   description = "List of Lambda layers that will be accessible to the Lambda function"
   type = list(object({
