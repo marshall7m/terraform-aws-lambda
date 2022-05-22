@@ -1,3 +1,14 @@
+# Terraform AWS Lambda
+
+## Description
+
+Terraform Module that provisions AWS resources to host a Lambda Function
+
+# Features
+
+- If `var.statements` and `var.custom_role_policy_arns` are not defined, an `AWSLambdaBasicExecutionRole` policy is attached to the Lambda Function's IAM role
+- If `var.vpc_config` is defined, a policy that allows the Lambda Function to be hosted within the VPC's subnet(s) is attached to the Lambda Function's IAM role
+
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Requirements
 
@@ -23,6 +34,7 @@
 | enabled | Determines if module should active | `bool` | `true` | no |
 | env\_vars | Environment variables to pass into Lambda Function | `map(string)` | `{}` | no |
 | filename | Local path to function zip | `string` | `null` | no |
+| force\_detach\_policies | Determines if policies attached to the Lambda Function's IAM role should be forcefully detached if the role is destroyed | `bool` | `false` | no |
 | function\_name | Name of function to invoke within filename | `string` | n/a | yes |
 | handler | Lambda Function entrypoint | `string` | n/a | yes |
 | image\_uri | AWS ECR image URI that contains the Lambda function deployment package | `string` | `null` | no |
