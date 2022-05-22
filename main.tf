@@ -1,7 +1,6 @@
 # TODO: Create option to upload lambda artifacts to s3 given s3 better support with bigger files
 # TODO: Add other function sources e.g. S3, ECR img, etc.
 
-
 locals {
   allowed_to_invoke = [for entity in var.allowed_to_invoke : merge(entity,
   { statement_id = "AllowInvokeFrom${title(split(".", entity.principal)[0])}" })]
@@ -110,12 +109,12 @@ resource "aws_iam_role_policy_attachment" "default" {
 }
 
 module "iam_role" {
-  count                   = var.enabled ? 1 : 0
-  source                  = "github.com/marshall7m/terraform-aws-iam/modules//iam-role"
-  role_name               = var.function_name
-  trusted_services        = ["lambda.amazonaws.com"]
-  custom_role_policy_arns = var.custom_role_policy_arns
-  statements              = var.statements
+  count                      = var.enabled ? 1 : 0
+  source                     = "github.com/marshall7m/terraform-aws-iam/modules//iam-role"
+  role_name                  = var.function_name
+  trusted_services           = ["lambda.amazonaws.com"]
+  custom_role_policy_arns    = var.custom_role_policy_arns
+  statements                 = var.statements
   role_force_detach_policies = var.force_detach_policies
 }
 
