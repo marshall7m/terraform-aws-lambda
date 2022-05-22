@@ -4,7 +4,7 @@
 
 Terraform Module that provisions AWS resources to host a Lambda Function
 
-# Features
+## Features
 
 - If `var.statements` and `var.custom_role_policy_arns` are not defined, an `AWSLambdaBasicExecutionRole` policy is attached to the Lambda Function's IAM role
 - If `var.vpc_config` is defined, a policy that allows the Lambda Function to be hosted within the VPC's subnet(s) is attached to the Lambda Function's IAM role
