@@ -18,7 +18,7 @@ resource "aws_lambda_function" "this" {
   handler          = var.handler
   source_code_hash = var.source_code_hash != null ? var.source_code_hash : filebase64sha256(var.filename)
   runtime          = var.runtime
-  layers           = [for n in var.lambda_layers[*].name : aws_lambda_layer_version.this[n].arn]
+  layers           = aws_lambda_layer_version.this[*].arn
 
   dynamic "vpc_config" {
     for_each = var.vpc_config != null ? [1] : []
@@ -119,16 +119,16 @@ module "iam_role" {
 }
 
 resource "aws_lambda_layer_version" "this" {
-  for_each            = { for layer in var.lambda_layers : layer.name => layer }
-  filename            = each.value.filename
-  layer_name          = each.value.name
-  compatible_runtimes = each.value.runtimes
-  source_code_hash    = each.value.source_code_hash != null ? each.value.source_code_hash : filebase64sha256(each.value.filename)
-  description         = each.value.description
-  license_info        = each.value.license_info
-  s3_bucket           = each.value.s3_bucket
-  s3_key              = each.value.s3_key
-  s3_object_version   = each.value.s3_object_version
+  count               = length(var.lambda_layers)
+  filename            = var.lambda_layers[count.index].filename
+  layer_name          = var.lambda_layers[count.index].name
+  compatible_runtimes = var.lambda_layers[count.index].runtimes
+  source_code_hash    = var.lambda_layers[count.index].source_code_hash != null ? var.lambda_layers[count.index].source_code_hash : filebase64sha256(var.lambda_layers[count.index].filename)
+  description         = var.lambda_layers[count.index].description
+  license_info        = var.lambda_layers[count.index].license_info
+  s3_bucket           = var.lambda_layers[count.index].s3_bucket
+  s3_key              = var.lambda_layers[count.index].s3_key
+  s3_object_version   = var.lambda_layers[count.index].s3_object_version
 }
 
 resource "aws_cloudwatch_log_group" "this" {
