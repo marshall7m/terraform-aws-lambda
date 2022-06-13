@@ -11,7 +11,7 @@ data "archive_file" "lambda_function" {
 }
 
 module "mut_function" {
-  source           = "../../../..//"
+  source           = "../../..//"
   filename         = data.archive_file.lambda_function.output_path
   source_code_hash = data.archive_file.lambda_function.output_base64sha256
   function_name    = "mut-terraform-aws-lambda-function-${random_id.lambda_function.id}"
