@@ -110,7 +110,7 @@ resource "aws_iam_role_policy_attachment" "default" {
 
 module "iam_role" {
   count                      = var.enabled ? 1 : 0
-  source                     = "github.com/marshall7m/terraform-aws-iam/modules//iam-role"
+  source                     = "github.com/marshall7m/terraform-aws-iam//modules/iam-role?ref=v0.1.0"
   role_name                  = var.function_name
   trusted_services           = ["lambda.amazonaws.com"]
   custom_role_policy_arns    = var.custom_role_policy_arns
