@@ -18,7 +18,7 @@ resource "aws_lambda_function" "this" {
   handler          = var.handler
   source_code_hash = var.source_code_hash != null ? var.source_code_hash : filebase64sha256(var.filename)
   runtime          = var.runtime
-  layers           = aws_lambda_layer_version.this[*].arn
+  layers           = concat(var.layer_arns, aws_lambda_layer_version.this[*].arn)
 
   dynamic "vpc_config" {
     for_each = var.vpc_config != null ? [1] : []

@@ -99,7 +99,10 @@ variable "force_detach_policies" {
 }
 
 variable "lambda_layers" {
-  description = "List of Lambda layers that will be accessible to the Lambda function"
+  description = <<EOF
+List of Lambda layers that will be created and accessible to the Lambda function.
+A maximum of 5 Lambda layers can be attached between var.lambda_layers and var.layer_arns.
+EOF
   type = list(object({
     filename          = optional(string)
     name              = string
@@ -112,6 +115,15 @@ variable "lambda_layers" {
     s3_object_version = optional(string)
   }))
   default = []
+}
+
+variable "layer_arns" {
+  description = <<EOF
+Lambda layer ARNs to attach to the Lambda Function. 
+A maximum of 5 Lambda layers can be attached between var.lambda_layers and var.layer_arns.
+EOF
+  type        = list(string)
+  default     = []
 }
 
 variable "enable_cw_logs" {
