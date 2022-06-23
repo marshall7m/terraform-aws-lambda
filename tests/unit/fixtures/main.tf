@@ -20,6 +20,8 @@ module "mut_function" {
   env_vars = {
     bar = "foo"
   }
+
+  enable_destinations     = true
   success_destination_arn = "arn:aws:lambda:us-west-2:000000000000:sqs:helloworld"
   failure_destination_arn = "arn:aws:lambda:us-west-2:000000000000:function:helloworld"
 }

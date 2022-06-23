@@ -43,7 +43,8 @@ Terraform Module that provisions AWS resources to host a Lambda Function
 | [aws_lambda_function_event_invoke_config.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function_event_invoke_config) | resource |
 | [aws_lambda_layer_version.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_layer_version) | resource |
 | [aws_lambda_permission.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
-| [aws_arn.lambda_dest](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/arn) | data source |
+| [aws_arn.failure_destination](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/arn) | data source |
+| [aws_arn.success_destination](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/arn) | data source |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [aws_iam_policy_document.destinations](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.vpc_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
@@ -57,6 +58,7 @@ Terraform Module that provisions AWS resources to host a Lambda Function
 | <a name="input_custom_role_policy_arns"></a> [custom\_role\_policy\_arns](#input\_custom\_role\_policy\_arns) | List of IAM policy ARNs to attach to the role | `list(string)` | `[]` | no |
 | <a name="input_cw_retention_in_days"></a> [cw\_retention\_in\_days](#input\_cw\_retention\_in\_days) | Number of days Cloudwatch should retain a log event | `number` | `14` | no |
 | <a name="input_enable_cw_logs"></a> [enable\_cw\_logs](#input\_enable\_cw\_logs) | Determines if Cloudwatch log group should be created and associated with Lambda function | `bool` | `true` | no |
+| <a name="input_enable_destinations"></a> [enable\_destinations](#input\_enable\_destinations) | Determines if Lambda Function will trigger downstream AWS services. Set to true if<br>  var.success\_destination\_arn or var.failure\_destination\_arn is defined. | `bool` | `false` | no |
 | <a name="input_enabled"></a> [enabled](#input\_enabled) | Determines if module should active | `bool` | `true` | no |
 | <a name="input_env_vars"></a> [env\_vars](#input\_env\_vars) | Environment variables to pass into Lambda Function | `map(string)` | `{}` | no |
 | <a name="input_failure_destination_arn"></a> [failure\_destination\_arn](#input\_failure\_destination\_arn) | AWS ARNs of services that will be invoked if Lambda function fails | `string` | `""` | no |

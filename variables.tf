@@ -168,3 +168,12 @@ variable "failure_destination_arn" {
   type        = string
   default     = ""
 }
+
+variable "enable_destinations" {
+  description = <<EOF
+  Determines if Lambda Function will trigger downstream AWS services. Set to true if
+  var.success_destination_arn or var.failure_destination_arn is defined.
+  EOF
+  type        = bool
+  default     = false
+}
