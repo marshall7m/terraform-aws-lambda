@@ -34,13 +34,18 @@ Terraform Module that provisions AWS resources to host a Lambda Function
 | Name | Type |
 |------|------|
 | [aws_cloudwatch_log_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_iam_policy.destinations](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_policy.vpc_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_role_policy_attachment.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_iam_role_policy_attachment.destinations](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_iam_role_policy_attachment.vpc_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_lambda_function.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function) | resource |
+| [aws_lambda_function_event_invoke_config.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function_event_invoke_config) | resource |
 | [aws_lambda_layer_version.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_layer_version) | resource |
 | [aws_lambda_permission.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
+| [aws_arn.lambda_dest](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/arn) | data source |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_iam_policy_document.destinations](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.vpc_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
@@ -54,6 +59,7 @@ Terraform Module that provisions AWS resources to host a Lambda Function
 | <a name="input_enable_cw_logs"></a> [enable\_cw\_logs](#input\_enable\_cw\_logs) | Determines if Cloudwatch log group should be created and associated with Lambda function | `bool` | `true` | no |
 | <a name="input_enabled"></a> [enabled](#input\_enabled) | Determines if module should active | `bool` | `true` | no |
 | <a name="input_env_vars"></a> [env\_vars](#input\_env\_vars) | Environment variables to pass into Lambda Function | `map(string)` | `{}` | no |
+| <a name="input_failure_destination_arn"></a> [failure\_destination\_arn](#input\_failure\_destination\_arn) | AWS ARNs of services that will be invoked if Lambda function fails | `string` | `""` | no |
 | <a name="input_filename"></a> [filename](#input\_filename) | Local path to function zip | `string` | `null` | no |
 | <a name="input_force_detach_policies"></a> [force\_detach\_policies](#input\_force\_detach\_policies) | Determines if policies attached to the Lambda Function's IAM role should be forcefully detached if the role is destroyed | `bool` | `false` | no |
 | <a name="input_function_name"></a> [function\_name](#input\_function\_name) | Name of function to invoke within filename | `string` | n/a | yes |
@@ -67,6 +73,7 @@ Terraform Module that provisions AWS resources to host a Lambda Function
 | <a name="input_s3_key"></a> [s3\_key](#input\_s3\_key) | AWS S3 bucket key of the Lambda function deployment package | `string` | `null` | no |
 | <a name="input_source_code_hash"></a> [source\_code\_hash](#input\_source\_code\_hash) | The base64-encoded SHA256 hash of the package file specified under `filename` or `s3_key`. <br>  Used to identify and update source code changes for Lambda function. | `string` | `null` | no |
 | <a name="input_statements"></a> [statements](#input\_statements) | IAM policy statements for role permissions | <pre>list(object({<br>    effect    = string<br>    resources = list(string)<br>    actions   = list(string)<br>    conditions = optional(list(object({<br>      test     = string<br>      variable = string<br>      values   = list(string)<br>    })))<br>  }))</pre> | `[]` | no |
+| <a name="input_success_destination_arn"></a> [success\_destination\_arn](#input\_success\_destination\_arn) | AWS ARNs of services that will be invoked if Lambda function succeeds | `string` | `""` | no |
 | <a name="input_timeout"></a> [timeout](#input\_timeout) | Time in seconds the Lambda function has to run | `number` | `3` | no |
 | <a name="input_vpc_config"></a> [vpc\_config](#input\_vpc\_config) | Subnet and security group IDs to associate the Lambda function with | <pre>object({<br>    subnet_ids         = list(string)<br>    security_group_ids = list(string)<br>  })</pre> | `null` | no |
 

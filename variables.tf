@@ -156,3 +156,15 @@ variable "vpc_config" {
   })
   default = null
 }
+
+variable "success_destination_arn" {
+  description = "AWS ARNs of services that will be invoked if Lambda function succeeds"
+  type        = string
+  default     = ""
+}
+
+variable "failure_destination_arn" {
+  description = "AWS ARNs of services that will be invoked if Lambda function fails"
+  type        = string
+  default     = ""
+}

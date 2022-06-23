@@ -4,6 +4,7 @@
 locals {
   allowed_to_invoke = [for entity in var.allowed_to_invoke : merge(entity,
   { statement_id = "AllowInvokeFrom${title(split(".", entity.principal)[0])}" })]
+  lambda_destination_arns = compact([var.success_destination_arn, var.failure_destination_arn])
 }
 
 resource "aws_lambda_function" "this" {
@@ -135,4 +136,86 @@ resource "aws_cloudwatch_log_group" "this" {
   count             = var.enable_cw_logs ? 1 : 0
   name              = "/aws/lambda/${var.function_name}"
   retention_in_days = var.cw_retention_in_days
+}
+
+data "aws_arn" "lambda_dest" {
+  count = length(local.lambda_destination_arns)
+  arn   = local.lambda_destination_arns[count.index]
+}
+resource "aws_lambda_function_event_invoke_config" "this" {
+  count         = length(local.lambda_destination_arns) > 0 ? 1 : 0
+  function_name = var.function_name
+  destination_config {
+    on_success {
+      destination = var.success_destination_arn
+    }
+
+    on_failure {
+      destination = var.failure_destination_arn
+    }
+  }
+}
+
+data "aws_iam_policy_document" "destinations" {
+  count = length(local.lambda_destination_arns) > 0 ? 1 : 0
+  dynamic "statement" {
+    for_each = contains(try(data.aws_arn.lambda_dest[*].service, []), "sqs") ? [1] : []
+    content {
+      sid    = "InvokeSqsDestination"
+      effect = "Allow"
+      actions = [
+        "sqs:SendMessage"
+      ]
+      resources = [for entity in data.aws_arn.lambda_dest : entity.arn if entity.service == "sqs"]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = contains(try(data.aws_arn.lambda_dest[*].service, []), "sns") ? [1] : []
+    content {
+      sid    = "InvokeSnsDestination"
+      effect = "Allow"
+      actions = [
+        "sns:Publish"
+      ]
+      resources = [for entity in data.aws_arn.lambda_dest : entity.arn if entity.service == "sns"]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = contains(try(data.aws_arn.lambda_dest[*].service, []), "events") ? [1] : []
+    content {
+      sid    = "InvokeEventsDestination"
+      effect = "Allow"
+      actions = [
+        "events:PutEvents"
+      ]
+      resources = [for entity in data.aws_arn.lambda_dest : entity.arn if entity.service == "events"]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = contains(try(data.aws_arn.lambda_dest[*].service, []), "lambda") ? [1] : []
+    content {
+      sid    = "InvokeLambdaDestination"
+      effect = "Allow"
+      actions = [
+        "lambda:InvokeFunction"
+      ]
+      resources = [for entity in data.aws_arn.lambda_dest : entity.arn if entity.service == "lambda"]
+    }
+  }
+}
+
+resource "aws_iam_policy" "destinations" {
+  count  = length(local.lambda_destination_arns) > 0 ? 1 : 0
+  name   = "${var.function_name}-destinations"
+  policy = data.aws_iam_policy_document.destinations[0].json
+}
+
+
+resource "aws_iam_role_policy_attachment" "destinations" {
+  count      = length(local.lambda_destination_arns) > 0 ? 1 : 0
+  role       = module.iam_role[0].role_name
+  policy_arn = aws_iam_policy.destinations[0].arn
 }
