@@ -4,8 +4,7 @@
 locals {
   allowed_to_invoke = [for entity in var.allowed_to_invoke : merge(entity,
   { statement_id = "AllowInvokeFrom${title(split(".", entity.principal)[0])}" })]
-
-  destinations = { for arn in compact([var.success_destination_arn, var.failure_destination_arn]) : arn => split(":", arn)[2] }
+  destinations = { for arn in compact(flatten([for config in var.destination_config : values(config)])) : arn => split(":", arn)[2] }
 }
 
 resource "aws_lambda_function" "this" {
@@ -121,7 +120,7 @@ module "iam_role" {
 }
 
 resource "aws_lambda_layer_version" "this" {
-  count               = length(var.lambda_layers)
+  count               = var.enabled ? length(var.lambda_layers) : 0
   filename            = var.lambda_layers[count.index].filename
   layer_name          = var.lambda_layers[count.index].name
   compatible_runtimes = var.lambda_layers[count.index].runtimes
@@ -140,21 +139,27 @@ resource "aws_cloudwatch_log_group" "this" {
 }
 
 resource "aws_lambda_function_event_invoke_config" "this" {
-  count         = var.enable_destinations ? 1 : 0
-  function_name = var.function_name
+  count         = var.enabled ? length(var.destination_config) : 0
+  function_name = aws_lambda_function.this[0].function_name
   destination_config {
-    on_success {
-      destination = var.success_destination_arn
+    dynamic "on_success" {
+      for_each = var.destination_config[count.index].success != null ? [1] : []
+      content {
+        destination = var.destination_config[count.index].success
+      }
     }
 
-    on_failure {
-      destination = var.failure_destination_arn
+    dynamic "on_failure" {
+      for_each = var.destination_config[count.index].failure != null ? [1] : []
+      content {
+        destination = var.destination_config[count.index].failure
+      }
     }
   }
 }
 
 data "aws_iam_policy_document" "destinations" {
-  count = var.enable_destinations ? 1 : 0
+  count = var.enabled && length(var.destination_config) > 0 ? 1 : 0
   dynamic "statement" {
     for_each = contains(values(local.destinations), "sqs") ? [1] : []
     content {
@@ -205,14 +210,14 @@ data "aws_iam_policy_document" "destinations" {
 }
 
 resource "aws_iam_policy" "destinations" {
-  count  = var.enable_destinations ? 1 : 0
+  count  = var.enabled && length(var.destination_config) > 0 ? 1 : 0
   name   = "${var.function_name}-destinations"
   policy = data.aws_iam_policy_document.destinations[0].json
 }
 
 
 resource "aws_iam_role_policy_attachment" "destinations" {
-  count      = var.enable_destinations ? 1 : 0
+  count      = var.enabled && length(var.destination_config) > 0 ? 1 : 0
   role       = module.iam_role[0].role_name
   policy_arn = aws_iam_policy.destinations[0].arn
 }

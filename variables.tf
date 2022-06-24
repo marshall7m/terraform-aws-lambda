@@ -157,23 +157,11 @@ variable "vpc_config" {
   default = null
 }
 
-variable "success_destination_arn" {
-  description = "AWS ARNs of services that will be invoked if Lambda function succeeds"
-  type        = string
-  default     = ""
-}
-
-variable "failure_destination_arn" {
-  description = "AWS ARNs of services that will be invoked if Lambda function fails"
-  type        = string
-  default     = ""
-}
-
-variable "enable_destinations" {
-  description = <<EOF
-  Determines if Lambda Function will trigger downstream AWS services. Set to true if
-  var.success_destination_arn or var.failure_destination_arn is defined.
-  EOF
-  type        = bool
-  default     = false
+variable "destination_config" {
+  description = "AWS ARNs of services that will be invoked if Lambda function succeeds or fails"
+  type = list(object({
+    success = optional(string)
+    failure = optional(string)
+  }))
+  default = []
 }

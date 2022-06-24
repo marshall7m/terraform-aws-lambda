@@ -55,11 +55,10 @@ Terraform Module that provisions AWS resources to host a Lambda Function
 | <a name="input_allowed_to_invoke"></a> [allowed\_to\_invoke](#input\_allowed\_to\_invoke) | Services that are allowed to invoke the Lambda function | <pre>list(object({<br>    statement_id = optional(string)<br>    principal    = string<br>    arn          = optional(string)<br>  }))</pre> | `[]` | no |
 | <a name="input_custom_role_policy_arns"></a> [custom\_role\_policy\_arns](#input\_custom\_role\_policy\_arns) | List of IAM policy ARNs to attach to the role | `list(string)` | `[]` | no |
 | <a name="input_cw_retention_in_days"></a> [cw\_retention\_in\_days](#input\_cw\_retention\_in\_days) | Number of days Cloudwatch should retain a log event | `number` | `14` | no |
+| <a name="input_destination_config"></a> [destination\_config](#input\_destination\_config) | AWS ARNs of services that will be invoked if Lambda function succeeds or fails | <pre>list(object({<br>    success = optional(string)<br>    failure = optional(string)<br>  }))</pre> | `[]` | no |
 | <a name="input_enable_cw_logs"></a> [enable\_cw\_logs](#input\_enable\_cw\_logs) | Determines if Cloudwatch log group should be created and associated with Lambda function | `bool` | `true` | no |
-| <a name="input_enable_destinations"></a> [enable\_destinations](#input\_enable\_destinations) | Determines if Lambda Function will trigger downstream AWS services. Set to true if<br>  var.success\_destination\_arn or var.failure\_destination\_arn is defined. | `bool` | `false` | no |
 | <a name="input_enabled"></a> [enabled](#input\_enabled) | Determines if module should active | `bool` | `true` | no |
 | <a name="input_env_vars"></a> [env\_vars](#input\_env\_vars) | Environment variables to pass into Lambda Function | `map(string)` | `{}` | no |
-| <a name="input_failure_destination_arn"></a> [failure\_destination\_arn](#input\_failure\_destination\_arn) | AWS ARNs of services that will be invoked if Lambda function fails | `string` | `""` | no |
 | <a name="input_filename"></a> [filename](#input\_filename) | Local path to function zip | `string` | `null` | no |
 | <a name="input_force_detach_policies"></a> [force\_detach\_policies](#input\_force\_detach\_policies) | Determines if policies attached to the Lambda Function's IAM role should be forcefully detached if the role is destroyed | `bool` | `false` | no |
 | <a name="input_function_name"></a> [function\_name](#input\_function\_name) | Name of function to invoke within filename | `string` | n/a | yes |
@@ -73,7 +72,6 @@ Terraform Module that provisions AWS resources to host a Lambda Function
 | <a name="input_s3_key"></a> [s3\_key](#input\_s3\_key) | AWS S3 bucket key of the Lambda function deployment package | `string` | `null` | no |
 | <a name="input_source_code_hash"></a> [source\_code\_hash](#input\_source\_code\_hash) | The base64-encoded SHA256 hash of the package file specified under `filename` or `s3_key`. <br>  Used to identify and update source code changes for Lambda function. | `string` | `null` | no |
 | <a name="input_statements"></a> [statements](#input\_statements) | IAM policy statements for role permissions | <pre>list(object({<br>    effect    = string<br>    resources = list(string)<br>    actions   = list(string)<br>    conditions = optional(list(object({<br>      test     = string<br>      variable = string<br>      values   = list(string)<br>    })))<br>  }))</pre> | `[]` | no |
-| <a name="input_success_destination_arn"></a> [success\_destination\_arn](#input\_success\_destination\_arn) | AWS ARNs of services that will be invoked if Lambda function succeeds | `string` | `""` | no |
 | <a name="input_timeout"></a> [timeout](#input\_timeout) | Time in seconds the Lambda function has to run | `number` | `3` | no |
 | <a name="input_vpc_config"></a> [vpc\_config](#input\_vpc\_config) | Subnet and security group IDs to associate the Lambda function with | <pre>object({<br>    subnet_ids         = list(string)<br>    security_group_ids = list(string)<br>  })</pre> | `null` | no |
 

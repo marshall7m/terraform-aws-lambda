@@ -10,6 +10,10 @@ data "archive_file" "lambda_function" {
   output_path = "${path.module}/function.zip"
 }
 
+resource "aws_sqs_queue" "this" {
+  name = "mut-terraform-aws-lambda-function-${random_id.lambda_function.id}"
+}
+
 module "mut_function" {
   source           = "../../..//"
   filename         = data.archive_file.lambda_function.output_path
@@ -21,7 +25,14 @@ module "mut_function" {
     bar = "foo"
   }
 
-  enable_destinations     = true
-  success_destination_arn = "arn:aws:sqs:us-west-2:000000000000:queue"
-  failure_destination_arn = "arn:aws:lambda:us-west-2:000000000000:function:helloworld"
+  destination_config = [
+    {
+      success = "arn:aws:lambda:us-west-2:000000000000:function:success"
+      failure = "arn:aws:lambda:us-west-2:000000000000:function:failure"
+    },
+    {
+      # ensures that the module is able to handle arns that haven't been created yet 
+      success = aws_sqs_queue.this.arn
+    }
+  ]
 }
