@@ -22,6 +22,6 @@ module "mut_function" {
   }
 
   enable_destinations     = true
-  success_destination_arn = "arn:aws:lambda:us-west-2:000000000000:sqs:helloworld"
+  success_destination_arn = "arn:aws:sqs:us-west-2:000000000000:queue"
   failure_destination_arn = "arn:aws:lambda:us-west-2:000000000000:function:helloworld"
 }
