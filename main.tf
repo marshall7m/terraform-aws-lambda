@@ -4,7 +4,7 @@
 locals {
   allowed_to_invoke = [for entity in var.allowed_to_invoke : merge(entity,
   { statement_id = "AllowInvokeFrom${title(split(".", entity.principal)[0])}" })]
-  destinations = { for arn in values(var.destination_config) : arn => split(":", arn)[2] }
+  destinations = { for arn in compact(values(var.destination_config)) : arn => split(":", arn)[2] }
 }
 
 resource "aws_lambda_function" "this" {
@@ -142,12 +142,19 @@ resource "aws_lambda_function_event_invoke_config" "this" {
   count         = var.enabled && var.destination_config != {} ? 1 : 0
   function_name = aws_lambda_function.this[0].function_name
   destination_config {
-    on_success {
-      destination = var.destination_config.success
-    }
+    dynamic "on_success" {
+      for_each = var.destination_config.success != null ? [1] : []
+      content {
+        destination = var.destination_config.success
+      }
 
-    on_failure {
-      destination = var.destination_config.failure
+    }
+    dynamic "on_failure" {
+      for_each = var.destination_config.failure != null ? [1] : []
+      content {
+        destination = var.destination_config.failure
+      }
+
     }
   }
 }
