@@ -159,9 +159,9 @@ variable "vpc_config" {
 
 variable "destination_config" {
   description = "AWS ARNs of services that will be invoked if Lambda function succeeds or fails"
-  type = list(object({
+  type = object({
     success = optional(string)
     failure = optional(string)
-  }))
-  default = []
+  })
+  default = {}
 }

@@ -25,14 +25,9 @@ module "mut_function" {
     bar = "foo"
   }
 
-  destination_config = [
-    {
-      success = "arn:aws:lambda:us-west-2:000000000000:function:success"
-      failure = "arn:aws:lambda:us-west-2:000000000000:function:failure"
-    },
-    {
-      # ensures that the module is able to handle arns that haven't been created yet 
-      success = aws_sqs_queue.this.arn
-    }
-  ]
+  destination_config = {
+    # ensures that the module is able to handle arns that haven't been created yet 
+    success = aws_sqs_queue.this.arn
+    failure = "arn:aws:lambda:us-west-2:000000000000:function:failure"
+  }
 }
