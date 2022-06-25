@@ -4,7 +4,7 @@
 locals {
   allowed_to_invoke = [for entity in var.allowed_to_invoke : merge(entity,
   { statement_id = "AllowInvokeFrom${title(split(".", entity.principal)[0])}" })]
-  destinations = { for arn in compact(values(var.destination_config)) : arn => split(":", arn)[2] }
+  destinations = var.destination_config != null ? { for arn in compact(values(var.destination_config)) : arn => split(":", arn)[2] } : {}
 }
 
 resource "aws_lambda_function" "this" {
@@ -137,7 +137,7 @@ resource "aws_cloudwatch_log_group" "this" {
 }
 
 resource "aws_lambda_function_event_invoke_config" "this" {
-  count         = var.destination_config != {} ? 1 : 0
+  count         = var.destination_config != null ? 1 : 0
   function_name = aws_lambda_function.this.function_name
   destination_config {
     dynamic "on_success" {
@@ -158,7 +158,7 @@ resource "aws_lambda_function_event_invoke_config" "this" {
 }
 
 data "aws_iam_policy_document" "destinations" {
-  count = var.destination_config != {} ? 1 : 0
+  count = var.destination_config != null ? 1 : 0
   dynamic "statement" {
     for_each = contains(values(local.destinations), "sqs") ? [1] : []
     content {
@@ -209,14 +209,14 @@ data "aws_iam_policy_document" "destinations" {
 }
 
 resource "aws_iam_policy" "destinations" {
-  count  = var.destination_config != {} ? 1 : 0
+  count  = var.destination_config != null ? 1 : 0
   name   = "${var.function_name}-destinations"
   policy = data.aws_iam_policy_document.destinations[0].json
 }
 
 
 resource "aws_iam_role_policy_attachment" "destinations" {
-  count      = var.destination_config != {} ? 1 : 0
+  count      = var.destination_config != null ? 1 : 0
   role       = module.iam_role.role_name
   policy_arn = aws_iam_policy.destinations[0].arn
 }

@@ -156,5 +156,5 @@ variable "destination_config" {
     success = optional(string)
     failure = optional(string)
   })
-  default = {}
+  default = null
 }
