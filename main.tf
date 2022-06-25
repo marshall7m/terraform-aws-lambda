@@ -8,14 +8,13 @@ locals {
 }
 
 resource "aws_lambda_function" "this" {
-  count            = var.enabled ? 1 : 0
   filename         = var.filename
   image_uri        = var.image_uri
   timeout          = var.timeout
   s3_bucket        = var.s3_bucket
   s3_key           = var.s3_key
   function_name    = var.function_name
-  role             = coalesce(var.role_arn, module.iam_role[0].role_arn)
+  role             = coalesce(var.role_arn, module.iam_role.role_arn)
   handler          = var.handler
   source_code_hash = var.source_code_hash != null ? var.source_code_hash : filebase64sha256(var.filename)
   runtime          = var.runtime
@@ -42,10 +41,10 @@ resource "aws_lambda_function" "this" {
 }
 
 resource "aws_lambda_permission" "this" {
-  count         = var.enabled ? length(local.allowed_to_invoke) : 0
+  count         = length(local.allowed_to_invoke)
   statement_id  = local.allowed_to_invoke[count.index].statement_id
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.this[0].function_name
+  function_name = aws_lambda_function.this.function_name
   principal     = local.allowed_to_invoke[count.index].principal
   source_arn    = local.allowed_to_invoke[count.index].arn
 }
@@ -99,18 +98,17 @@ resource "aws_iam_policy" "vpc_access" {
 
 resource "aws_iam_role_policy_attachment" "vpc_access" {
   count      = var.vpc_config != null ? 1 : 0
-  role       = module.iam_role[0].role_name
+  role       = module.iam_role.role_name
   policy_arn = aws_iam_policy.vpc_access[0].arn
 }
 
 resource "aws_iam_role_policy_attachment" "default" {
   count      = length(var.statements) == 0 && length(var.custom_role_policy_arns) == 0 ? 1 : 0
-  role       = module.iam_role[0].role_name
+  role       = module.iam_role.role_name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
 module "iam_role" {
-  count                      = var.enabled ? 1 : 0
   source                     = "github.com/marshall7m/terraform-aws-iam//modules/iam-role?ref=v0.1.0"
   role_name                  = var.function_name
   trusted_services           = ["lambda.amazonaws.com"]
@@ -120,7 +118,7 @@ module "iam_role" {
 }
 
 resource "aws_lambda_layer_version" "this" {
-  count               = var.enabled ? length(var.lambda_layers) : 0
+  count               = length(var.lambda_layers)
   filename            = var.lambda_layers[count.index].filename
   layer_name          = var.lambda_layers[count.index].name
   compatible_runtimes = var.lambda_layers[count.index].runtimes
@@ -139,8 +137,8 @@ resource "aws_cloudwatch_log_group" "this" {
 }
 
 resource "aws_lambda_function_event_invoke_config" "this" {
-  count         = var.enabled && var.destination_config != {} ? 1 : 0
-  function_name = aws_lambda_function.this[0].function_name
+  count         = var.destination_config != {} ? 1 : 0
+  function_name = aws_lambda_function.this.function_name
   destination_config {
     dynamic "on_success" {
       for_each = var.destination_config.success != null ? [1] : []
@@ -160,7 +158,7 @@ resource "aws_lambda_function_event_invoke_config" "this" {
 }
 
 data "aws_iam_policy_document" "destinations" {
-  count = var.enabled && var.destination_config != {} ? 1 : 0
+  count = var.destination_config != {} ? 1 : 0
   dynamic "statement" {
     for_each = contains(values(local.destinations), "sqs") ? [1] : []
     content {
@@ -211,14 +209,14 @@ data "aws_iam_policy_document" "destinations" {
 }
 
 resource "aws_iam_policy" "destinations" {
-  count  = var.enabled && var.destination_config != {} ? 1 : 0
+  count  = var.destination_config != {} ? 1 : 0
   name   = "${var.function_name}-destinations"
   policy = data.aws_iam_policy_document.destinations[0].json
 }
 
 
 resource "aws_iam_role_policy_attachment" "destinations" {
-  count      = var.enabled && var.destination_config != {} ? 1 : 0
-  role       = module.iam_role[0].role_name
+  count      = var.destination_config != {} ? 1 : 0
+  role       = module.iam_role.role_name
   policy_arn = aws_iam_policy.destinations[0].arn
 }

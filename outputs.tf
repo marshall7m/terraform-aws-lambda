@@ -1,21 +1,21 @@
 output "function_arn" {
   description = "ARN of the Lambda function"
-  value       = aws_lambda_function.this[0].arn
+  value       = aws_lambda_function.this.arn
 }
 
 output "function_name" {
   description = "Name of the Lambda function"
-  value       = aws_lambda_function.this[0].function_name
+  value       = aws_lambda_function.this.function_name
 }
 
 output "function_invoke_arn" {
   description = "ARN used to invoke the Lambda function via AWS API Gateway"
-  value       = aws_lambda_function.this[0].invoke_arn
+  value       = aws_lambda_function.this.invoke_arn
 }
 
 output "role_arn" {
   description = "ARN of the IAM role the Lambda function assumes"
-  value       = module.iam_role[0].role_arn
+  value       = module.iam_role.role_arn
 }
 
 output "layer_arns" {

@@ -57,7 +57,6 @@ Terraform Module that provisions AWS resources to host a Lambda Function
 | <a name="input_cw_retention_in_days"></a> [cw\_retention\_in\_days](#input\_cw\_retention\_in\_days) | Number of days Cloudwatch should retain a log event | `number` | `14` | no |
 | <a name="input_destination_config"></a> [destination\_config](#input\_destination\_config) | AWS ARNs of services that will be invoked if Lambda function succeeds or fails | <pre>object({<br>    success = optional(string)<br>    failure = optional(string)<br>  })</pre> | `{}` | no |
 | <a name="input_enable_cw_logs"></a> [enable\_cw\_logs](#input\_enable\_cw\_logs) | Determines if Cloudwatch log group should be created and associated with Lambda function | `bool` | `true` | no |
-| <a name="input_enabled"></a> [enabled](#input\_enabled) | Determines if module should active | `bool` | `true` | no |
 | <a name="input_env_vars"></a> [env\_vars](#input\_env\_vars) | Environment variables to pass into Lambda Function | `map(string)` | `{}` | no |
 | <a name="input_filename"></a> [filename](#input\_filename) | Local path to function zip | `string` | `null` | no |
 | <a name="input_force_detach_policies"></a> [force\_detach\_policies](#input\_force\_detach\_policies) | Determines if policies attached to the Lambda Function's IAM role should be forcefully detached if the role is destroyed | `bool` | `false` | no |

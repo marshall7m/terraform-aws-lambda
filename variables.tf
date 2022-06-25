@@ -1,10 +1,3 @@
-
-variable "enabled" {
-  description = "Determines if module should active"
-  type        = bool
-  default     = true
-}
-
 variable "filename" {
   description = "Local path to function zip"
   type        = string
